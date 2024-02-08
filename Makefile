@@ -14,3 +14,6 @@ train_catboost:
 
 train_tensorflow:
 	python predictions/train_tensorflow.py
+
+dev:
+	cd app && FLASK_APP=app.py FLASK_ENV=development FLASK_DEBUG=1 flask run --reload
