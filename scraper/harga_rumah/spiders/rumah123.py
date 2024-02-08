@@ -6,10 +6,10 @@ from urllib.parse import urlparse, urljoin
 import scrapy
 
 MONTHS = [
-    "Januari", "Februari", "Maret", "April", "Mei",
-    "Juni", "Juli", "Agustus", "September", "Oktober",
-    "November", "Desember"
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus",
+    "September", "Oktober", "November", "Desember"
 ]
+
 
 #
 # Rumah123.com Spider
@@ -34,19 +34,32 @@ class Rumah123Spider(scrapy.Spider):
         # this is detail page, extract the data
         if self.is_property_page(response.url):
             yield {
-                'id': self.extract_id(response),
-                'price': self.extract_price(response),
-                'installment': self.extract_installment(response),
-                'address': self.extract_address(response),
-                'tags': self.extract_tags(response),
-                'description': self.extract_description(response),
-                'specs': self.extract_specs(response),
-                'facilities': self.extract_facilities(response),
-                'agent': self.extract_property_agent(response),
-                'images': list(self.extract_images(response)),
-                'url': response.url,
-                'last_modified': self.extract_last_modified(response).isoformat(),
-                'scraped_at': datetime.datetime.now().isoformat(),
+                'id':
+                    self.extract_id(response),
+                'price':
+                    self.extract_price(response),
+                'installment':
+                    self.extract_installment(response),
+                'address':
+                    self.extract_address(response),
+                'tags':
+                    self.extract_tags(response),
+                'description':
+                    self.extract_description(response),
+                'specs':
+                    self.extract_specs(response),
+                'facilities':
+                    self.extract_facilities(response),
+                'agent':
+                    self.extract_property_agent(response),
+                'images':
+                    list(self.extract_images(response)),
+                'url':
+                    response.url,
+                'last_modified':
+                    self.extract_last_modified(response).isoformat(),
+                'scraped_at':
+                    datetime.datetime.now().isoformat(),
             }
 
         # extract all url
@@ -63,7 +76,8 @@ class Rumah123Spider(scrapy.Spider):
     # price in million rupiah
     def extract_price(self, response):
         # extract price
-        price = response.xpath("//div[@class='r123-listing-summary__price']/span/text()").get()
+        price = response.xpath(
+            "//div[@class='r123-listing-summary__price']/span/text()").get()
 
         # split to get the price components
         components = price.split(" ")
@@ -84,7 +98,8 @@ class Rumah123Spider(scrapy.Spider):
     # installment per month in million rupiah
     def extract_installment(self, response):
         # extract installment per month
-        installment_per_month = response.xpath("//div[@class='r123-listing-summary__installment']/text()").get()
+        installment_per_month = response.xpath(
+            "//div[@class='r123-listing-summary__installment']/text()").get()
 
         # if there is no installment, then return None
         if len(installment_per_month) == 0:
@@ -109,7 +124,9 @@ class Rumah123Spider(scrapy.Spider):
 
     def extract_tags(self, response):
         # extract tags
-        tags = response.xpath("//div[@class='ui-listing-overview__badge-wrapper']/div/div/text()").getall()
+        tags = response.xpath(
+            "//div[@class='ui-listing-overview__badge-wrapper']/div/div/text()"
+        ).getall()
 
         # return all tags
         return [f.strip() for f in tags]
@@ -129,7 +146,8 @@ class Rumah123Spider(scrapy.Spider):
 
     def extract_specs(self, response):
         # get all specs
-        specs_div = response.xpath("//div[@class='listing-specification-v2__item']")
+        specs_div = response.xpath(
+            "//div[@class='listing-specification-v2__item']")
 
         # extract all facilities
         specs = {}
@@ -155,19 +173,20 @@ class Rumah123Spider(scrapy.Spider):
 
     def extract_property_agent(self, response):
         # get host URL
-        base_url = '{uri.scheme}://{uri.netloc}'.format(uri=urlparse(response.url))
+        base_url = '{uri.scheme}://{uri.netloc}'.format(
+            uri=urlparse(response.url))
 
         # to store the agent data
         agent = {}
 
         # extract property agent
         agent_elem = response.xpath(
-            "//a[@class='r123o-m-listing-inquiry__wrapper-agent']"
-        )
+            "//a[@class='r123o-m-listing-inquiry__wrapper-agent']")
 
         if len(agent_elem) != 0:
             agent["name"] = agent_elem.xpath("./@title").get().strip()
-            agent["url"] = urljoin(base_url, agent_elem.xpath("./@href").get().strip())
+            agent["url"] = urljoin(base_url,
+                                   agent_elem.xpath("./@href").get().strip())
 
         # extract phone
         agent_phone = response.xpath(
@@ -179,13 +198,15 @@ class Rumah123Spider(scrapy.Spider):
 
         # extract agent company
         company_elem = response.xpath(
-            "//a[@class='r123o-m-listing-inquiry__wrapper-organization']"
-        )
+            "//a[@class='r123o-m-listing-inquiry__wrapper-organization']")
 
         if len(company_elem) != 0:
             agent["company"] = {
-                "name": company_elem.xpath("./@title").get().strip(),
-                "url": urljoin(base_url, company_elem.xpath("./@href").get().strip()),
+                "name":
+                    company_elem.xpath("./@title").get().strip(),
+                "url":
+                    urljoin(base_url,
+                            company_elem.xpath("./@href").get().strip()),
             }
 
         # return agent
