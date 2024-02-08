@@ -165,3 +165,7 @@ bogor_houses.db
 
 # scrapy stuff
 crawls/
+
+# data
+dataset/
+models/
