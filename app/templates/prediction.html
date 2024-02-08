@@ -1,0 +1,67 @@
+{% extends "components/base.html" %}
+{% set active_page = "predictions" %}
+
+{% block title %}Prediksi Harga Rumah{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="has-text-centered mb-6">
+        <h1 class="title is-1">Prediksi Harga Rumah</h1>
+    </div>
+
+    <div class="container">
+        <form action="{{ url_for('predictions.predict') }}" method="post">
+            <div class="columns is-desktop">
+                <div class="column">
+                    {{ FORM.InputNumber('kamar_mandi', 'Kamar Mandi', value='1') }}
+                    {{ FORM.InputNumber('kamar_tidur', 'Kamar Tidur', value='1') }}
+                    {{ FORM.InputNumber('kamar_pembantu', 'Kamar Pembantu', value='0') }}
+                    {{ FORM.InputNumber('kamar_mandi_pembantu', 'Kamar Mandi Pembantu', value='0') }}
+                </div>
+                <div class="column">
+                    {{ FORM.InputNumber('jumlah_lantai', 'Jumlah Lantai', value='1') }}
+                    {{ FORM.InputNumber('luas_bangunan', 'Luas Bangunan (m2)', value='120') }}
+                    {{ FORM.InputNumber('luas_tanah', 'Luas Tanah (m2)', value='200') }}
+                    {{ FORM.InputNumber('daya_listrik', 'Daya Listrik (Watt)', value='1300') }}
+                </div>
+                <div class="column">
+                    {{ FORM.InputNumber('lebar_jalan', 'Lebar Jalan (mobil)', value='1') }}
+                    {{ FORM.InputNumber('carport', 'Carport', value='1') }}
+                    {{ FORM.InputNumber('garasi', 'Garasi', value='1') }}
+                    {{ FORM.InputNumber('dapur', 'Dapur', value='1') }}
+                </div>
+                <div class="column">
+                    {{ FORM.InputSelect('sumber_air', 'Sumber Air', WATER_SOURCE_ITEMS) }}
+                    {{ FORM.InputSelect('pemandangan', 'Pemandangan', VIEW_ITEMS) }}
+                    {{ FORM.InputSelect('konsep_dan_gaya_rumah', 'Konsep dan Gaya Rumah', CONCEPT_ITEMS) }}
+                    {{ FORM.InputSelect('sertifikat', 'Sertifikat', CERTIFICATE_ITEMS) }}
+                </div>
+                <div class="column">
+                    {{ FORM.InputSelect('kondisi_perabotan', 'Kondisi Perabotan', CONDITION_ITEMS) }}
+                    {{ FORM.InputSelect('kondisi_properti', 'Kondisi Properti', CONDITION_ITEMS) }}
+                    {{ FORM.InputSelect('material_bangunan', 'Material Bangunan', HOUSE_MATERIAL_ITEMS) }}
+                    {{ FORM.InputSelect('material_lantai', 'Material Lantai', FLOOR_MATERIAL_ITEMS) }}
+                </div>
+                <div class="column">
+                    {{ FORM.InputCheckBoxes('fasilitas', 'Fasilitas', FACILITY_ITEMS) }}
+                    {{ FORM.InputCheckBoxes('tags', 'Tags', TAG_ITEMS) }}
+                </div>
+            </div>
+
+            <div class="field is-grouped">
+                <div class="control">
+                    <button class="button is-link" type="submit">
+                        <span class="icon">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </span>
+                        <span>Prediksi</span>
+                    </button>
+                </div>
+                <div class="control">
+                    <button class="button is-link is-light" type="reset">Bersihkan</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

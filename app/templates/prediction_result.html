@@ -1,0 +1,22 @@
+{% extends "components/base.html" %}
+{% set active_page = "predictions" %}
+
+{% block title %}Prediksi Harga Rumah{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/prediction.css' )}}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="has-text-centered">
+        <h1 class="title is-1">Prediksi Harga Rumah</h1>
+
+        <p class="prediction-result">{{ predicted_price }}</p>
+        <p class="subtitle">Rentang harga: {{ predicted_price_range }}</p>
+
+        <p class="mt-6">Catatan: rentang harga rumah berdasarkan <i>Mean Absolute Error (MAE)</i> pada model sebesar <span class="is-underlined">{{ predicted_error }}</span>.</p>
+    </div>
+</div>
+{% endblock %}

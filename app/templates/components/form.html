@@ -1,0 +1,50 @@
+{% macro InputText(id, label, placeholder='', value='') -%}
+<div class="field">
+    <label class="label">{{ label | safe }}</label>
+    <div class="control">
+        <input id="{{ id }}" name="{{ id }}" class="input" type="text" placeholder="{{ placeholder | safe }}"
+            value="{{ value }}">
+    </div>
+</div>
+{%- endmacro %}
+
+{% macro InputNumber(id, label, placeholder='', value='') -%}
+<div class="field">
+    <label class="label">{{ label | safe }}</label>
+    <div class="control">
+        <input id="{{ id }}" name="{{ id }}" class="input" type="number" placeholder="{{ placeholder | safe }}"
+            value="{{ value }}" min="0">
+    </div>
+</div>
+{%- endmacro %}
+
+{% macro InputSelect(id, label, items, value='') -%}
+<div class="field">
+    <label class="label">{{ label | safe }}</label>
+    <div class="control">
+        <div class="select">
+            <select id="{{ id }}" name="{{ id }}">
+                {% for caption, value in items %}
+                <option value="{{ value }}">{{ caption }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
+{%- endmacro %}
+
+{% macro InputCheckBoxes(id, label, items, value='') -%}
+<div class="field">
+    <label class="label">{{ label | safe }}</label>
+    <div class="control">
+        <div class="form-checkboxes">
+            {% for caption, value in items %}
+        <label class="checkbox">
+            <input id="{{ id }}_{{ value }}" name="{{ id }}_{{ value }}" type="checkbox" value="{{ value }}">
+            {{ caption }}
+        </label>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+{%- endmacro %}

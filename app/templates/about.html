@@ -1,0 +1,33 @@
+{% extends "components/base.html" %}
+{% set active_page = "about" %}
+
+{% block title %}Tentang{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title is-1">NyariRumah</h1>
+    <h4 class="title is-4">House price prediction with LLM recommendation</h4>
+    <p>Copyright &copy; Fahmi Noor Fiqri 2024</p>
+    <p>Part of Kodesiana Ecosystem.</p>
+    <p>Licensed under Apache License 2.0.</p>
+
+    <p class="mt-4">Built with:</p>
+    <p>Miniconda, Python, Scrapy, DuckDB, Pandas, Scikit-Learn, CatBoost, TensorFlow, Optuna, MLflow, Matplotlib,
+        Seaborn, Flask, Gunicorn, SQLAlchemy,<br>Jupyter Notebook, Docker, Visual Studio Code</p>
+
+    <div class="buttons mt-6">
+        <a class="button is-info is-light" href="https://www.kodesiana.com">
+            <span class="icon">
+                <i class="fa-solid fa-house"></i>
+            </span>
+            <span>Homepage</span>
+        </a>
+        <a class="button is-info is-light" href="https://github.com/fahminlb33">
+            <span class="icon">
+                <i class="fa-brands fa-github"></i>
+            </span>
+            <span>GitHub</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
