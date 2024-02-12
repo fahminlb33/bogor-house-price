@@ -108,7 +108,7 @@ class HouseL2RegressionPipeline(ETLMixin):
                     rule["value"])
 
     def load(self):
-        logging.info("Dataframe info:\n" + self.df.info())
+        self.df.info()
         self.df.to_parquet(f"{self.output_dir}/L2.raw_features.parquet")
 
 

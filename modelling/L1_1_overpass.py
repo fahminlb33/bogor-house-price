@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--input-dir",
                         help="Input directory containing JSON files",
-                        default="./dataset/osm")
+                        default="./dataset/osm/*.json")
     parser.add_argument("--output-dir",
                         help="Output directory for Parquet files",
                         default="./dataset/etl")

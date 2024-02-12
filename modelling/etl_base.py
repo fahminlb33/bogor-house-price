@@ -2,6 +2,9 @@ import abc
 import logging
 
 
+def MultipleArgsParser(s):
+    return [str(item) for item in s.split(',')]
+
 class ProcessorBase(object, metaclass=abc.ABCMeta):
 
     def __init__(self) -> None:

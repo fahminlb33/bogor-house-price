@@ -7,7 +7,7 @@ from urllib.parse import quote, urljoin
 
 import requests
 
-from etl_base import ProcessorBase
+from etl_base import ProcessorBase, MultipleArgsParser
 from etl_constants import (OVERPASS_DEFAULT_BASE_URL, OVERPASS_DEFAULT_TIMEOUT,
                            OVERPASS_DEFAULT_DOWNLOAD_SLEEP,
                            OVERPASS_DEFAULT_RELATIONS,
@@ -85,11 +85,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--rels",
-                        nargs="+",
+                        nargs=MultipleArgsParser,
                         help="Root areas to fetch",
                         default=OVERPASS_DEFAULT_RELATIONS)
     parser.add_argument("--amenities",
-                        nargs="+",
+                        nargs=MultipleArgsParser,
                         help="Amenities to fetch",
                         default=OVERPASS_DEFAULT_AMENITIES)
     parser.add_argument("--output-dir",
