@@ -4,14 +4,16 @@ import argparse
 import datetime
 
 import joblib
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
 from sklearn.ensemble import RandomForestRegressor
 
-from etl_base import ProcessorBase, TrainerMixin
+from etl_base import TrainerMixin
 
 
 class TrainRandomForest(TrainerMixin):
@@ -107,13 +109,41 @@ class TrainRandomForest(TrainerMixin):
         # fit model
         clf.fit(self.X, self.y)
 
-        # save model
+        # --- save model
         logging.info("Saving model...")
-        joblib.dump(clf, self.output_path)
+        joblib.dump(clf, os.path.join(self.output_path, "model.joblib"))
+
+        # --- save model importance
+        # load model
+        forest = clf.named_steps["regressor"]
+
+        # get importance and calculate standard deviation
+        importances = forest.feature_importances_
+        std = np.std([tree.feature_importances_ for tree in forest.estimators_], axis=0)
+
+        # normalize feature names
+        feature_names = self.compose_transformers.get_feature_names_out()
+        feature_names = [name.replace("catergorical_encoder__", "") for name in feature_names]
+        feature_names = [name.replace("numerical_encoder__", "") for name in feature_names]
+        feature_names = [name.replace("passthrough__", "") for name in feature_names]
+
+        # create importance series
+        forest_importances = pd.Series(importances, index=feature_names).sort_values(ascending=False)
+        forest_importances.to_csv(os.path.join(self.output_path, "importance.csv"))
+
+        # plot importance
+        fig, ax = plt.subplots(figsize=(20, 10))
+        forest_importances.plot.bar(yerr=std, ax=ax)
+        ax.set_title("Feature importances using MDI")
+        ax.set_ylabel("Mean decrease in impurity")
+        fig.tight_layout()
+
+        # save plot
+        fig.savefig(os.path.join(self.output_path, "importance.png"))
 
     def run(self):
         logging.info("Creating output directory...")
-        os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
+        os.makedirs(self.output_path, exist_ok=True)
 
         logging.info("Loading dataset...")
         self.load_data()
@@ -132,9 +162,9 @@ if __name__ == "__main__":
     parser.add_argument("--dataset",
                         help="Input dataset from L3",
                         default="./dataset/etl/L3.regression_train.parquet")
-    parser.add_argument("--output",
-                        help="Output file for model in Joblib format",
-                        default=f"./models/random_forest-{today}.joblib")
+    parser.add_argument("--output-path",
+                        help="Output path for model and metrics",
+                        default=f"./models/random_forest-{today}")
     parser.add_argument("--bootstrap", help="Bootstrap", default=True)
     parser.add_argument("--max_depth", help="Max depth", default=30)
     parser.add_argument("--max_features", help="Max features", default=None)
@@ -150,11 +180,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # setup logging
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s %(levelname)-8s %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
-
     # train model
-    trainer = TrainRandomForest(args.dataset, args.output)
+    trainer = TrainRandomForest(args.dataset, args.output_path, args.bootstrap,
+                                args.max_depth, args.max_features,
+                                args.min_samples_leaf, args.min_samples_split,
+                                args.n_estimators, args.n_jobs, args.random_state)
     trainer.run()
