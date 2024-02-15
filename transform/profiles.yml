@@ -1,0 +1,14 @@
+rumah_transform:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      schema: clickhere
+
+      user: {{ env_var('DBT_ENV_SECRET_CLICKHOUSE_USER') }}
+      password: {{ env_var('DBT_ENV_SECRET_CLICKHOUSE_PASSWORD') }}
+
+      #optional fields
+      driver: native
+      port: 19000
+      host: localhost

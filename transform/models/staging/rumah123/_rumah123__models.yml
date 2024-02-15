@@ -1,0 +1,19 @@
+version: 2
+
+models:
+    - name: stg_rumah123_houses
+      description: Staging Rumah123 house summary
+      columns:
+        - name: id
+          description: House listing ID
+          tests:
+            - not_null
+        - name: price
+          tests:
+            - not_null
+        - name: installment
+        - name: address
+        - name: description
+        - name: url
+        - name: last_modified
+        - name: scraped_at

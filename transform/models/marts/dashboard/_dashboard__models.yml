@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: marts_dashboard_dim_districts
+    description: Rumah123 district dimension
+    columns:
+      - name: city
+        description: City name
+      - name: district
+        description: District name
+
+  - name: marts_dashboard_fact_price_by_district
+    description: Rumah123 house price average and median per city and district
+    columns:
+      - name: district_key
+        description: District surrogate key to join with district dimension
+      - name: price_avg
+        description: Average house price
+      - name: price_median
+        description: Median house price

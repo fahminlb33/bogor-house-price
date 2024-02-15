@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+    - name: raw_rumah123
+      schema: clickhere
+      description: OSM data
+      tables:
+      - name: raw_rumah123_houses
+        description: Raw Rumah123 house listing

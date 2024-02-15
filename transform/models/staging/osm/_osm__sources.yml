@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+    - name: raw_osm
+      schema: clickhere
+      description: OSM data
+      tables:
+      - name: raw_osm_amenities
+        description: Raw OpenStreetMap data from Overpass

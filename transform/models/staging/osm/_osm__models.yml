@@ -1,0 +1,42 @@
+version: 2
+
+models:
+    - name: stg_osm_amenities
+      description: Staging OSM amenities
+      columns:
+        - name: id
+          description: Relation ID
+          tests:
+            - not_null
+        - name: rel
+          description: Relation ID
+          tests:
+            - not_null
+        - name: amenity
+          description: amenity tag
+          tests:
+            - not_null
+        - name: object_type
+          description: OSM data
+          tests:
+            - not_null
+            - accepted_values:
+                values: ['node', 'way', 'relation']
+        - name: lat
+          description: Latitude
+          tests:
+            - not_null
+            - dbt_utils.accepted_range:
+                min_value: -90
+                max_value: 90
+        - name: lon
+          description: Longitude
+          tests:
+            - not_null
+            - dbt_utils.accepted_range:
+                min_value: -180
+                max_value: 180
+        - name: nodes
+          description: Related nodes
+        - name: tags
+          description: Node tags
