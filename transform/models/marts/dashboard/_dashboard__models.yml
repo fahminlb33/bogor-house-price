@@ -17,6 +17,8 @@ models:
 
   - name: marts_dashboard_dim_districts
     description: Rumah123 district dimension
+    config:
+      tags: ["marts", "dashboard", "dimension"]
     columns:
       - name: district_sk
         description: District surrogate key to join with district dimension
@@ -27,6 +29,8 @@ models:
 
   - name: marts_dashboard_fact_price_by_district
     description: Rumah123 house price average and median per city and district
+    config:
+      tags: ["marts", "dashboard", "fact"]
     columns:
       - name: district_sk
         description: District surrogate key to join with district dimension
