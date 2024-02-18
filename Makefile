@@ -17,3 +17,7 @@ train_tensorflow:
 
 dev:
 	cd app && FLASK_APP=app.py FLASK_ENV=development FLASK_DEBUG=1 flask run --reload
+
+etl:
+	dbt run
+	dbt docs generate
