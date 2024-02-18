@@ -4,7 +4,7 @@ house_materials AS (
         unnest(string_split(lower(material_bangunan), ',')) AS material,
         reference_id
     FROM
-        {{ ref('int_rumah123_specs_norm') }}
+        {{ ref('int_rumah123_norm_specs') }}
 )
 
 SELECT

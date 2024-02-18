@@ -62,6 +62,8 @@ SELECT
 	hadap_lower AS hadap,
 	konsep_dan_gaya_rumah,
 	pemandangan,
+	sumber_air,
+	garasi,
 
 	--- boolean columns
 	ruang_makan_available AS ruang_makan,
