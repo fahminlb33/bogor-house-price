@@ -13,8 +13,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
 from sklearn.ensemble import RandomForestRegressor
 
-from etl_base import TrainerMixin
-
+from ml_base import TrainerMixin
 
 class TrainRandomForest(TrainerMixin):
 

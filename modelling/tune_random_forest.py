@@ -13,7 +13,7 @@ from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error, r2_score
 
-from plot_helpers import plot_distributions, plot_residuals, plot_predictions
+from ml_plot import plot_distributions, plot_residuals, plot_predictions
 
 DATASET_PATH = "./dataset/etl/L2.regression_inliers.parquet"
 

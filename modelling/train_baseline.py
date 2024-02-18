@@ -28,7 +28,7 @@ from sklearn.linear_model import LinearRegression, Lasso, Ridge, BayesianRidge
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.neural_network import MLPRegressor
 
-from etl_base import TrainerMixin
+from ml_base import TrainerMixin
 
 # define configuration
 TRAIN_BASELINE_CV_SPLIT = 10
