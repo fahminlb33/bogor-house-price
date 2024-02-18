@@ -12,7 +12,7 @@ stg_houses AS (
 final AS (
     SELECT
         -- key
-        {{ dbt_utils.generate_surrogate_key(['district', 'city']) }} as district_sk,
+        {{ dbt_utils.generate_surrogate_key(['district', 'city']) }} AS district_sk,
 
         -- attributes
         district,

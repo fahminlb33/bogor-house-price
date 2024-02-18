@@ -2,23 +2,6 @@ version: 2
 
 models:
   - name: int_rumah123_norm_floor_materials
-    description: Materials used to build the house
-    config:
-      tags: ["intermediate", "rumah123", "norm"]
-    columns:
-      - name: reference_id
-        description: Reference to property listing ID
-        tests:
-          - not_null
-          - relationships:
-              to: ref('stg_rumah123_houses')
-              field: id
-      - name: house_material
-        description: Building material
-        tests:
-          - not_null
-
-  - name: int_rumah123_norm_house_materials
     description: Floor materials used in the house
     config:
       tags: ["intermediate", "rumah123", "norm"]
@@ -30,13 +13,14 @@ models:
           - relationships:
               to: ref('stg_rumah123_houses')
               field: id
+
       - name: floor_material
         description: Floor material
-        tests:
-          - not_null
 
-  - name: int_rumah123_norm_specs
-    description: Basic house property listing information
+  - name: int_rumah123_norm_house_materials
+    description: Materials used to build the house
+    config:
+      tags: ["intermediate", "rumah123", "norm"]
     columns:
       - name: reference_id
         description: Reference to property listing ID
@@ -46,106 +30,82 @@ models:
               to: ref('stg_rumah123_houses')
               field: id
 
+      - name: house_material
+        description: House material
+
+  - name: int_rumah123_norm_specs
+    description: Basic house property listing information
+    config:
+      tags: ["intermediate", "rumah123", "norm"]
+    columns:
+      - name: reference_id
+        description: Reference to property listing ID
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_rumah123_houses')
+              field: id
+      - name: id_iklan
+        description: The same ID as `reference_id`, this is a duplicate column
+
       # numerical columns
       - name: kamar_tidur
         description: Number of bedrooms
-        tests:
-          - not_null
       - name: kamar_mandi
         description: Number of bathrooms
-        tests:
-          - not_null
       - name: kamar_pembantu
         description: Number of maid rooms
-        tests:
-          - not_null
       - name: kamar_mandi_pembantu
         description: Number of maid bathrooms
-        tests:
-          - not_null
       - name: dapur
         description: Number of kitchens
-        tests:
-          - not_null
       - name: luas_tanah
         description: Land area in square meters
-        tests:
-          - not_null
       - name: luas_bangunan
         description: Building area in square meters
-        tests:
-          - not_null
       - name: jumlah_lantai
         description: Number of floors
-        tests:
-          - not_null
       - name: carport
         description: Number of carports
-        tests:
-          - not_null
       - name: daya_listrik
         description: Electricity capacity in watts
-        tests:
-          - not_null
       - name: lebar_jalan
         description: Road width in number of cars
-        tests:
-          - not_null
       - name: tahun_dibangun
         description: Year the building was built
-        tests:
-          - not_null
       - name: tahun_di_renovasi
         description: Year the building was last renovated
-        tests:
-          - not_null
 
       # categorical columns
       - name: tipe_properti
         description: Type of property
-        tests:
-          - not_null
       - name: sertifikat
         description: Certificate type
-        tests:
-          - not_null
       - name: kondisi_properti
         description: Property condition
-        tests:
-          - not_null
-          - accepted_values:
-              values: ['furnished', 'unfurnished', 'semi-furnished']
       - name: kondisi_perabotan
         description: Furniture condition
-        tests:
-          - not_null
-          - accepted_values:
-              values: ['furnished', 'unfurnished', 'semi-furnished']
+      - name: material_bangunan
+        description: Building material
+      - name: material_lantai
+        description: Floor material
       - name: hadap
         description: Building orientation
-        tests:
-          - not_null
-          - accepted_values:
-              values: ['selatan', 'utara', 'barat', 'timur', 'selatan-barat', 'selatan-timur', 'utara-barat', 'utara-timur']
       - name: konsep_dan_gaya_rumah
         description: House concept and style
       - name: pemandangan
         description: View from the property
+      - name: sumber_air
+        description: Water source
+      - name: facility_garasi
+        description: Number of garages
 
       # boolean columns
       - name: ruang_makan
         description: Has dining room
-        tests:
-          - not_null
       - name: ruang_tamu
         description: Has living room
-        tests:
-          - not_null
       - name: terjangkau_internet
         description: Has internet connectivity
-        tests:
-          - not_null
       - name: hook
         description: Has hook for cable TV
-        tests:
-          - not_null

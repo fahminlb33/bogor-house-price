@@ -8,7 +8,7 @@ stg_houses AS (
 final AS (
     SELECT
         -- key
-        {{ dbt_utils.generate_surrogate_key(['stg_houses.district', 'stg_houses.city']) }} as district_key,
+        {{ dbt_utils.generate_surrogate_key(['stg_houses.district', 'stg_houses.city']) }} AS district_sk,
 
         -- attributes
         avg(price) AS price_avg,
