@@ -17,9 +17,9 @@ clean-targets:
 
 models:
   rumah_transform:
-    intermediate:
-      +materialized: table
     staging:
       +materialized: table
+    intermediate:
+      +materialized: view
     marts:
-      +materialized: table
+      +materialized: view
