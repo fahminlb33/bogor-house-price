@@ -1,5 +1,6 @@
 rumah_transform:
   target: dev
+  threads: 2
   outputs:
     dev:
       type: duckdb
