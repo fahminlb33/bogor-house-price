@@ -29,7 +29,7 @@ outliers_extra AS (
 	FROM
 		outliers_iqr
 	WHERE
-		kamar_tidur > {{ MAX_BEDROOMS }} AND
+		kamar_tidur < {{ MAX_BEDROOMS }} AND
 		luas_tanah < {{ MAX_LAND_AREA }}
 )
 
