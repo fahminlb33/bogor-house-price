@@ -1,6 +1,20 @@
 version: 2
 
 models:
+  - name: marts_dashboard_correlations
+    description: Pearson/point biser correlations between house price and house variables (only numeric features)
+    config:
+      tags: ["marts", "dashboard", "correlations"]
+    columns:
+      - name: variable
+        description: Variable name
+      - name: method
+        description: Correlation method, either pearson or point biserial
+      - name: correlation
+        description: Correlation coefficient
+      - name: p_value
+        description: P-value of the correlation using T-test
+
   - name: marts_dashboard_dim_districts
     description: Rumah123 district dimension
     columns:
