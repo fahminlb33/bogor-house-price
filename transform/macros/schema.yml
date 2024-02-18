@@ -1,0 +1,42 @@
+version: 2
+
+macros:
+  # ---- pivot.sql
+  - name: crosstab
+    description: A macro to compute a frequency table of the factors in `column_name`
+    arguments:
+      - name: table_name
+        type: string
+        description: Source table containing the data
+      - name: column_name
+        type: string
+        description: Column name to compute the frequency table
+      - name: column_prefix
+        type: string
+        description: Prefix to add to the column names
+      - name: keep_cols
+        type: string
+        description: Columns to keep in the final table
+
+  # ---- normalize_values.sql
+  - name: bool_to_int
+    description: A macro to convert boolean columns to integer, designed to use on SELECT queries
+    arguments:
+      - name: column_name
+        type: string
+        description: Column name to convert to integer
+
+  - name: normalize_kondisi
+    description: A macro to normalize the values of `kondisi_properti` and `kondisi_perabotan` column, designed to use on SELECT queries
+    arguments:
+      - name: column_name
+        type: string
+        description: Column name to normalize the values
+
+  - name: normalize_sertifikat
+    description: A macro to normalize the values of `sertifikat`, designed to use on SELECT queries
+    arguments:
+      - name: column_name
+        type: string
+        description: Column name to normalize the values
+
