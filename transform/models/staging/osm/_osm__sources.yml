@@ -4,8 +4,26 @@ sources:
   - name: raw_osm
     schema: project_rumah_regresi
     description: OSM data
+    config:
+      tags: ["staging", "osm", "spatial"]
     tables:
-    - name: raw_osm_amenities
+    - name: amenities
       description: Raw OpenStreetMap data from Overpass
       meta:
         external_location: "read_json_auto('../dataset/osm/*.json')"
+      columns:
+        - name: rel
+          description: Parent relation ID, describing the location of this object. Usually an ID of a city or a district
+          type: VARCHAR
+          tests:
+            - not_null
+        - name: amenity
+          description: Amenity type (e.g. school, hospital, etc.)
+          type: VARCHAR
+          tests:
+            - not_null
+        - name: data
+          description: API response from Overpass
+          type: STRUCT
+          tests:
+            - not_null

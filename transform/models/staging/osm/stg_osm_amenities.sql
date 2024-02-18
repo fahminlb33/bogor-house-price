@@ -5,7 +5,7 @@ amenities_unnested AS (
         amenity,
         unnest(data.elements) AS element
     FROM
-        {{ source('raw_osm', 'raw_osm_amenities') }}
+        {{ source('raw_osm', 'amenities') }}
 ),
 amenities_clear AS (
 	SELECT

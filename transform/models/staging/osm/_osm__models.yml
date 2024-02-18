@@ -2,44 +2,46 @@ version: 2
 
 models:
   - name: stg_osm_amenities
-    description: Staging OSM amenities
+    description: OpenStreetMap amenities from Overpass API
+    config:
+      tags: ["staging", "osm", "spatial"]
     columns:
       - name: id
-        description: Relation ID
+        description: Unique ID for this object
         tests:
           - not_null
       - name: rel
-        description: Relation ID
+        description: Parent relation ID, describing the location of this object. Usually an ID of a city or a district
         tests:
           - not_null
       - name: amenity
-        description: amenity tag
+        description: Amenity type (e.g. school, hospital, etc.)
         tests:
           - not_null
       - name: object_type
-        description: OSM data
+        description: OSM object type (node, way, relation)
         tests:
           - not_null
           - accepted_values:
               values: ['node', 'way', 'relation']
       - name: lat
-        description: Latitude
+        description: Object latitude coordinate
         tests:
           - not_null
           - dbt_utils.accepted_range:
               min_value: -90
               max_value: 90
       - name: lon
-        description: Longitude
+        description: Object longitude coordinate
         tests:
           - not_null
           - dbt_utils.accepted_range:
               min_value: -180
               max_value: 180
       - name: nodes
-        description: Related nodes
+        description: Related nodes to this object
       - name: tags
-        description: Node tags
+        description: Tags associated with this object
       - name: category
         description: OpenStreetMap amenity category classification
         tests:
