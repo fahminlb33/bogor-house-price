@@ -8,9 +8,6 @@ models:
       shapefile_paths:
         - "../dataset/shp/kota/ADMINISTRASIDESA_AR_25K.shp"
         - "../dataset/shp/kab/ADMINISTRASIDESA_AR_25K.shp"
-    constraints:
-      - type: primary_key
-        columns: [place]
     columns:
       - name: place
         description: District in the city
@@ -67,9 +64,6 @@ models:
     description: Correlation matrix of available amenities and house price in a city district. Correlation is calculated using Pearson correlation coefficient.
     config:
       tags: [spatial, marts, correlation]
-    constraints:
-      - type: primary_key
-        columns: [place]
     columns:
       - name: education
         description: Pearson correlation coefficient between number of education institution and house price
