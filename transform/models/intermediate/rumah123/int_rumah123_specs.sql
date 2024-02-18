@@ -17,6 +17,7 @@ house_specs_proc AS (
 		try_cast(rtrim(lebar_jalan, ' Mobil') AS FLOAT) AS lebar_jalan_num,
 		try_cast(tahun_dibangun AS INT) AS tahun_dibangun_num,
 		try_cast(tahun_di_renovasi AS INT) AS tahun_di_renovasi_num,
+		try_cast(garasi AS INT) AS garasi_num,
 
 		--- parse property state columns
 		lower(kondisi_properti) AS kondisi_properti_lower,
@@ -63,7 +64,7 @@ SELECT
 	konsep_dan_gaya_rumah,
 	pemandangan,
 	sumber_air,
-	garasi,
+	garasi_num AS garasi,
 
 	--- boolean columns
 	ruang_makan_available AS ruang_makan,
