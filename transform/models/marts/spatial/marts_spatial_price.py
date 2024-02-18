@@ -76,7 +76,7 @@ def model(dbt, session):
 	df_overpass = df_overpass.drop(columns=["lat", "lon"])
 
 	# load houses dataset
-	df_houses = dbt.ref("stg_rumah123_houses").df().drop(columns=["description", "url"])
+	df_houses = dbt.ref("stg_rumah123_houses").select("district", "price").df()
 	df_houses["place"] = df_houses["district"].replace(SPATIAL_PLACE_NORM_RULES)
 	df_houses["price"] = np.log(df_houses["price"])
 
