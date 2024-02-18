@@ -1,9 +1,11 @@
 version: 2
 
 sources:
-    - name: raw_rumah123
-      schema: clickhere
-      description: OSM data
-      tables:
-      - name: raw_rumah123_houses
-        description: Raw Rumah123 house listing
+  - name: raw_rumah123
+    schema: project_rumah_regresi
+    description: Rumah123 scraped data
+    tables:
+    - name: houses
+      description: Raw Rumah123 house listing
+      meta:
+        external_location: "read_json_auto('../dataset/all/houses-20k.json')"

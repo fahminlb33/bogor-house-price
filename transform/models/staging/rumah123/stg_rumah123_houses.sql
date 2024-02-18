@@ -1,9 +1,10 @@
-WITH houses AS (
+WITH
+houses AS (
 	SELECT
         *,
-        splitByString(', ', COALESCE(address, ', ')) AS address_parts
+        regexp_split_to_array(address, ', ') AS address_parts
     FROM
-        {{ source('raw_rumah123', 'raw_rumah123_houses') }}
+        {{ source('raw_rumah123', 'houses') }}
 )
 
 SELECT

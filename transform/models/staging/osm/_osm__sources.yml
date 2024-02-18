@@ -1,9 +1,11 @@
 version: 2
 
 sources:
-    - name: raw_osm
-      schema: clickhere
-      description: OSM data
-      tables:
-      - name: raw_osm_amenities
-        description: Raw OpenStreetMap data from Overpass
+  - name: raw_osm
+    schema: project_rumah_regresi
+    description: OSM data
+    tables:
+    - name: raw_osm_amenities
+      description: Raw OpenStreetMap data from Overpass
+      meta:
+        external_location: "read_json_auto('../dataset/osm/*.json')"
