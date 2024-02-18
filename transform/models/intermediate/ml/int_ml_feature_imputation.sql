@@ -324,8 +324,8 @@
 
 SELECT
 	{% for column in columns %}
-		{% set rule = impute_rules[column.name] %}
-		{% if rule %}
+		{%- set rule = impute_rules[column.name] -%}
+		{%- if rule -%}
 			{% if rule['method'] == 'constant' %}
 				-- fill {{ column.name }} with constant value '{{ rule['value'] }}'
 				{% set col_value = "'{}'".format(rule["value"]) if rule["value"] is string else rule["value"] %}
@@ -333,36 +333,37 @@ SELECT
 
 			{% elif rule['method'] == 'mode' %}
 				-- fill {{ column.name }} with mode value
-				{% set col_mode_query %}
+				{%- set col_mode_query -%}
 					SELECT mode({{ column.name }}) FROM {{ ref('int_ml_feature_construction') }}
-				{% endset %}
-				{% set col_mode = dbt_utils.get_single_value(col_mode_query) %}
+				{%- endset -%}
+				{%- set col_mode = dbt_utils.get_single_value(col_mode_query) -%}
 				{% set col_value = "'{}'".format(col_mode) if col_mode is string else col_mode %}
 
 				coalesce(orig.{{ column.name }}, {{ col_value }}) AS {{ column.name }}{{ "," if not loop.last }}
 
 			{% elif rule['method'] == 'mean' %}
 				-- fill {{ column.name }} with mean value
-				{% set col_avg_query %}
+				{%- set col_avg_query -%}
 					SELECT avg({{ column.name }}) FROM {{ ref('int_ml_feature_construction') }}
-				{% endset %}
+				{%- endset -%}
 				{% set col_avg = dbt_utils.get_single_value(col_avg_query) %}
 
 				coalesce(orig.{{ column.name }}, {{ col_avg }}) AS {{ column.name }}{{ "," if not loop.last }}
 
 			{% elif rule['method'] == 'median' %}
 				-- fill {{ column.name }} with median value
-				{% set col_median_query %}
+				{%- set col_median_query -%}
 					SELECT median({{ column.name }}) FROM {{ ref('int_ml_feature_construction') }}
-				{% endset %}
+				{%- endset -%}
 				{% set col_median = dbt_utils.get_single_value(col_median_query) %}
 
 				coalesce(orig.{{ column.name }}, {{ col_median }}) AS {{ column.name }}{{ "," if not loop.last }}
 			{% endif %}
-		{% else %}
+		{%- else -%}
 			-- keep {{ column.name }} as is
+
 			orig.{{ column.name }}{{ "," if not loop.last }}
-		{% endif %}
+		{%- endif -%}
 	{% endfor %}
 FROM
 	{{ ref('int_ml_feature_construction') }} AS orig
