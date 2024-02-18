@@ -1,11 +1,66 @@
 version: 2
 
 models:
+  - name: stg_rumah123_agent_companies
+    description: Property agent company responsible for listing/selling the house
+    columns:
+      - name: reference_id
+        description: Reference to property listing ID
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_rumah123_houses')
+              field: id
+
+      - name: name
+        description: Property agent company name
+      - name: url
+        description: Property agent company URL
+
+  - name: stg_rumah123_agents
+    description: Agent/sales person responsible for listing/selling the house
+    columns:
+      - name: reference_id
+        description: Reference to property listing ID
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_rumah123_houses')
+              field: id
+
+      - name: name
+        description: Masked agent name (for PII compliance)
+      - name: phone
+        description: Masked agent phone number (for PII compliance)
+      - name: agent_hash
+        description: Unique agent hash
+        tests:
+          - not_null
+
+  - name: stg_rumah123_facilities
+    description: Property facilities (e.g. swimming pool, garden, etc.) in long format
+    columns:
+      - name: reference_id
+        description: Reference to property listing ID
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_rumah123_houses')
+              field: id
+
+      - name: facility
+        description: Facility kind (e.g. swimming pool, garden, etc.)
+        tests:
+          - not_null
+
   - name: stg_rumah123_houses
     description: Basic house property listing information
     columns:
       - name: id
         description: Unique property listing ID
+        tests:
+          - not_null
+          - unique
       - name: price
         description: House price in million IDR
       - name: installment
@@ -22,6 +77,8 @@ models:
         description: House property last modified date
       - name: scraped_at
         description: House property scraped date
+        tests:
+          - not_null
 
   - name: stg_rumah123_images
     description: Property images
@@ -36,43 +93,9 @@ models:
               to: ref('stg_rumah123_houses')
               field: id
 
-  - name: stg_rumah123_agents
-    description: Property seller agent
+  - name: stg_rumah123_specs
+    description: Property specs (e.g. number of bedrooms, bathrooms, etc.)
     columns:
-      - name: name
-        description: Masked agent name (for PII compliance)
-      - name: phone
-        description: Masked agent phone number (for PII compliance)
-      - name: agent_hash
-        description: Unique agent hash
-      - name: reference_id
-        description: Reference to property listing ID
-        tests:
-          - not_null
-          - relationships:
-              to: ref('stg_rumah123_houses')
-              field: id
-
-  - name: stg_rumah123_agent_companies
-    description: Property agent company
-    columns:
-      - name: name
-        description: Property agent company name
-      - name: url
-        description: Property agent company URL
-      - name: reference_id
-        description: Reference to property listing ID
-        tests:
-          - not_null
-          - relationships:
-              to: ref('stg_rumah123_houses')
-              field: id
-
-  - name: stg_rumah123_facilities
-    description: Property facilities
-    columns:
-      - name: facility
-        description: Facility name
       - name: reference_id
         description: Reference to property listing ID
         tests:
@@ -84,8 +107,6 @@ models:
   - name: stg_rumah123_tags
     description: Property tags (e.g. furnished, unfurnished, etc.)
     columns:
-      - name: tag
-        description: Tag name
       - name: reference_id
         description: Reference to property listing ID
         tests:
@@ -94,4 +115,8 @@ models:
               to: ref('stg_rumah123_houses')
               field: id
 
+      - name: tag
+        description: Tag name (e.g. furnished, unfurnished, etc.)
+        tests:
+          - not_null
 

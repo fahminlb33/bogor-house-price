@@ -3,9 +3,51 @@ version: 2
 sources:
   - name: raw_rumah123
     schema: project_rumah_regresi
-    description: Rumah123 scraped data
+    description: House property listing from Rumah123
+    config:
+      tags: ["staging", "rumah123"]
     tables:
     - name: houses
-      description: Raw Rumah123 house listing
+      description: Raw, semi-structured house property listing data
       meta:
-        external_location: "read_json_auto('../dataset/all/houses-20k.json')"
+        external_location: "read_json_auto('../dataset/house/*.json')"
+      columns:
+        - name: id
+          description: Unique property listing ID
+          type: VARCHAR
+        - name: price
+          description: House price in million IDR
+          type: DOUBLE
+        - name: installment
+          type: DOUBLE
+          description: House installment per month in million IDR
+        - name: address
+          type: VARCHAR
+          description: House address in district and city format
+        - name: tags
+          type: ARRAY
+          description: Property tags (e.g. furnished, unfurnished, etc.)
+        - name: description
+          type: VARCHAR
+          description: House property manually entered description
+        - name: specs
+          type: STRUCT
+          description: Property specs (e.g. number of bedrooms, bathrooms, etc.)
+        - name: facilities
+          type: ARRAY
+          description: Property facilities (e.g. swimming pool, garden, etc.) in array format
+        - name: agent
+          type: STRUCT
+          description: Agent/sales person and company responsible for listing/selling the house
+        - name: images
+          type: ARRAY
+          description: Property images in array format
+        - name: url
+          type: VARCHAR
+          description: House property listing URL to Rumah123
+        - name: last_modified
+          type: TIMESTAMP
+          description: Date when this property listing was last modified
+        - name: scraped_at
+          type: TIMESTAMP
+          description: Date when this property listing was scraped

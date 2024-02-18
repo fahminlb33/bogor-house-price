@@ -15,7 +15,7 @@ SELECT
     address_parts[2] AS city,
     description,
     url,
-    last_modified,
-    scraped_at
+    last_modified::TIMESTAMP AS last_modified,
+    scraped_at::TIMESTAMP AS scraped_at
 FROM
     houses
