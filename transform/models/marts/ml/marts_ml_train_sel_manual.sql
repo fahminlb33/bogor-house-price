@@ -2,6 +2,10 @@
 
 WITH base AS (
 	SELECT
+		-- target
+		price,
+
+		-- features
 		carport,
 		dapur,
 		daya_listrik,

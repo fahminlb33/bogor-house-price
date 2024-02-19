@@ -16,6 +16,10 @@
 
 WITH base AS (
 	SELECT
+		-- target
+		price,
+
+		-- features
 		{% for feature in significant_features %}
 			{%- if "spatial" not in feature and feature not in EXCLUDE_COLUMNS -%}
 				{{ feature }}{{ ', ' if not loop.last }}
