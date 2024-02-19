@@ -1,9 +1,8 @@
 import re
 
 from rumah_constants import (FACILITY_NAME_OUTLIERS, FACILITY_NAME_RULESET,
-                           COMPANY_NAME_COMMONS, COMPANY_NAME_STOPWORDS,
-                           COMPANY_NAME_INDEPENDENT)
-
+                             COMPANY_NAME_COMMONS, COMPANY_NAME_STOPWORDS,
+                             COMPANY_NAME_INDEPENDENT)
 
 
 def mask_name(s: str) -> str:

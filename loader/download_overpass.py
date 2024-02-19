@@ -7,7 +7,6 @@ from urllib.parse import quote, urljoin
 
 import requests
 
-
 OVERPASS_DEFAULT_BASE_URL = "https://overpass-api.de"
 OVERPASS_DEFAULT_TIMEOUT = 360
 OVERPASS_DEFAULT_DOWNLOAD_SLEEP = 5
@@ -22,6 +21,7 @@ OVERPASS_DEFAULT_AMENITIES = [
     "fire_station", "post_office", "prison", "bench", "toilets",
     "vending_machine", "food_court"
 ]
+
 
 def MultipleArgsParser(s):
     return [str(item) for item in s.split(',')]

@@ -6,4 +6,3 @@ st.set_page_config(
 )
 
 st.write("Hello world")
-

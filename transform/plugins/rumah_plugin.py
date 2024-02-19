@@ -9,6 +9,7 @@ from rumah_transformers import mask_name, mask_phone, clean_facility, clean_agen
 # The python module that you create must have a class named "Plugin"
 # which extends the `dbt.adapters.duckdb.plugins.BasePlugin` class.
 class Plugin(BasePlugin):
+
     def configure_connection(self, conn: DuckDBPyConnection):
         conn.create_function("MASK_NAME", mask_name)
         conn.create_function("MASK_PHONE", mask_phone)

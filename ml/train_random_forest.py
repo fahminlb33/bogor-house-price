@@ -15,6 +15,7 @@ from sklearn.ensemble import RandomForestRegressor
 
 from ml_base import TrainerMixin
 
+
 class TrainRandomForest(TrainerMixin):
 
     def __init__(self,
@@ -118,17 +119,26 @@ class TrainRandomForest(TrainerMixin):
 
         # get importance and calculate standard deviation
         importances = forest.feature_importances_
-        std = np.std([tree.feature_importances_ for tree in forest.estimators_], axis=0)
+        std = np.std([tree.feature_importances_ for tree in forest.estimators_],
+                     axis=0)
 
         # normalize feature names
         feature_names = self.compose_transformers.get_feature_names_out()
-        feature_names = [name.replace("catergorical_encoder__", "") for name in feature_names]
-        feature_names = [name.replace("numerical_encoder__", "") for name in feature_names]
-        feature_names = [name.replace("passthrough__", "") for name in feature_names]
+        feature_names = [
+            name.replace("catergorical_encoder__", "") for name in feature_names
+        ]
+        feature_names = [
+            name.replace("numerical_encoder__", "") for name in feature_names
+        ]
+        feature_names = [
+            name.replace("passthrough__", "") for name in feature_names
+        ]
 
         # create importance series
-        forest_importances = pd.Series(importances, index=feature_names).sort_values(ascending=False)
-        forest_importances.to_csv(os.path.join(self.output_path, "importance.csv"))
+        forest_importances = pd.Series(
+            importances, index=feature_names).sort_values(ascending=False)
+        forest_importances.to_csv(
+            os.path.join(self.output_path, "importance.csv"))
 
         # plot importance
         fig, ax = plt.subplots(figsize=(20, 10))
@@ -183,5 +193,6 @@ if __name__ == "__main__":
     trainer = TrainRandomForest(args.dataset, args.output_path, args.bootstrap,
                                 args.max_depth, args.max_features,
                                 args.min_samples_leaf, args.min_samples_split,
-                                args.n_estimators, args.n_jobs, args.random_state)
+                                args.n_estimators, args.n_jobs,
+                                args.random_state)
     trainer.run()

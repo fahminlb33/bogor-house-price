@@ -63,44 +63,49 @@ SPATIAL_PLACE_NORM_RULES = {
 
 
 def model(dbt, session):
-  	# load shapefile dataset
-	shapefiles = [
-		gpd.read_file(path) for path in dbt.config.get("shapefile_paths")
-	]
+    # load shapefile dataset
+    shapefiles = [
+        gpd.read_file(path) for path in dbt.config.get("shapefile_paths")
+    ]
 
-	df_bogor = pd.concat(shapefiles, ignore_index=True)
+    df_bogor = pd.concat(shapefiles, ignore_index=True)
 
-	# load overpass dataset
-	df_osm = dbt.ref("stg_osm_amenities").df().drop(columns=["nodes", "tags"])
-	df_overpass = gpd.GeoDataFrame(df_osm, geometry=gpd.points_from_xy(df_osm.lon, df_osm.lat), crs=SPATIAL_OVERPASS_CRS)
-	df_overpass = df_overpass.drop(columns=["lat", "lon"])
+    # load overpass dataset
+    df_osm = dbt.ref("stg_osm_amenities").df().drop(columns=["nodes", "tags"])
+    df_overpass = gpd.GeoDataFrame(df_osm,
+                                   geometry=gpd.points_from_xy(
+                                       df_osm.lon, df_osm.lat),
+                                   crs=SPATIAL_OVERPASS_CRS)
+    df_overpass = df_overpass.drop(columns=["lat", "lon"])
 
-	# load houses dataset
-	df_houses = dbt.ref("stg_rumah123_houses").select("district", "price").df()
-	df_houses["place"] = df_houses["district"].replace(SPATIAL_PLACE_NORM_RULES)
+    # load houses dataset
+    df_houses = dbt.ref("stg_rumah123_houses").select("district", "price").df()
+    df_houses["place"] = df_houses["district"].replace(SPATIAL_PLACE_NORM_RULES)
 
-	avg_house_prices = df_houses.groupby("place")["price"].mean()
+    avg_house_prices = df_houses.groupby("place")["price"].mean()
 
-	# join spatial datasets (points from overpass and polygons from shapefile)
-	df_places = gpd.sjoin_nearest(df_bogor.to_crs(SPATIAL_GEODETIC_CRS), df_overpass.to_crs(SPATIAL_GEODETIC_CRS), distance_col="distance") \
-		.drop(columns=["index_right"])
+    # join spatial datasets (points from overpass and polygons from shapefile)
+    df_places = gpd.sjoin_nearest(df_bogor.to_crs(SPATIAL_GEODETIC_CRS), df_overpass.to_crs(SPATIAL_GEODETIC_CRS), distance_col="distance") \
+      .drop(columns=["index_right"])
 
-	# convert to pandas DataFrame
-	df_places = pd.DataFrame(df_places.drop(columns=["geometry", "SHAPE_Leng", "SHAPE_Area"]))
+    # convert to pandas DataFrame
+    df_places = pd.DataFrame(
+        df_places.drop(columns=["geometry", "SHAPE_Leng", "SHAPE_Area"]))
 
-	# calculate number of amenities per place
-	df_amenities = df_places\
-			.pivot_table(index="NAMOBJ", columns="category", values="id", aggfunc="count", fill_value=0) \
-			.reset_index() \
-			.rename(columns={"NAMOBJ": "place"})
+    # calculate number of amenities per place
+    df_amenities = df_places \
+      .pivot_table(index="NAMOBJ", columns="category", values="id", aggfunc="count", fill_value=0) \
+      .reset_index() \
+      .rename(columns={"NAMOBJ": "place"})
 
-	# normalize place names
-	df_amenities["place"] = df_amenities["place"].replace(SPATIAL_PLACE_NORM_RULES)
+    # normalize place names
+    df_amenities["place"] = df_amenities["place"] \
+        .replace(SPATIAL_PLACE_NORM_RULES)
 
-	# join with average house prices
-	df_spatial = df_amenities \
-		.join(avg_house_prices, on="place") \
-		.reset_index(drop=True) \
-		.dropna()
+    # join with average house prices
+    df_spatial = df_amenities \
+     .join(avg_house_prices, on="place") \
+     .reset_index(drop=True) \
+     .dropna()
 
-	return df_spatial
+    return df_spatial
