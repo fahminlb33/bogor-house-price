@@ -3,7 +3,8 @@ import pandas as pd
 import scipy.stats as stats
 
 IGNORE_COLUMNS = [
-	"id", "price", "installment", "district", "city", "description", "url", "last_modified", "scraped_at"
+	"id", "price", "installment", "district", "city",
+	"description", "url", "last_modified", "scraped_at", "place"
 ]
 
 def should_use_point_biser_corr(column):
@@ -14,7 +15,7 @@ def model(dbt, session):
 	df = dbt.ref("int_ml_feature_outlier_removal")
 
 	# get the price field
-	price_col = list(map(lambda x: x[0], df.select("price").fetchall()))
+	price_col = np.log(list(map(lambda x: x[0], df.select("price").fetchall())))
 
 	# calculate point biserial/pearson correlation for each column
 	corrs = []
@@ -42,6 +43,21 @@ def model(dbt, session):
 		corrs.append({
 			"variable": column,
 			"method": method,
+			"correlation": corr[0],
+			"p_value": corr[1]
+		})
+
+	# calculate pearson correlation for spatial data
+	df_spatial = dbt.ref("marts_spatial_price").df()
+	for col in df_spatial.columns:
+		if col in IGNORE_COLUMNS:
+			continue
+
+		# calculate correlation
+		corr = stats.pearsonr(df_spatial[col], df_spatial["price"])
+		corrs.append({
+			"variable": f"spatial_{col}",
+			"method": "pearson",
 			"correlation": corr[0],
 			"p_value": corr[1]
 		})
