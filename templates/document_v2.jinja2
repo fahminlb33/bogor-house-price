@@ -1,0 +1,15 @@
+Kode rumah: {{ row.id }}
+Dijual rumah dengan harga Rp{{ '{:,.0f}'.format(row.price * 1000000).replace(',', '.') }} yang beralamat di {{ row.district }}, {{ row.city }}, Indonesia.
+Luas tanah {{ row.luas_tanah }} meter persegi dengan luas bangunan {{ row.luas_bangunan }} meter persegi{% if row.tahun_dibangun > 0 %} dan dibangun pada tahun {{ row.tahun_dibangun | int }}{% endif %}.
+Rumah terdiri atas {{ row.jumlah_lantai | num_max(1) | int }} lantai dengan {{ row.kamar_tidur | int }} kamar tidur, {{ row.kamar_mandi | int }} kamar mandi{% if row.kamar_pembantu > 0 %}, dan {{ row.kamar_pembantu | int }} kamar pembantu{% endif %}.
+Fasilitas yang tersedia adalah {% if row.carport > 0 %}{{ row.carport }} carport, {% endif %}{% if row.lebar_jalan > 0 %}jalan muat {{ row.lebar_jalan | int }} mobil,{% endif %}{% if row.dapur > 0 %} {{ row.dapur }} dapur,{% endif %}{% if row.daya_listrik > 0 %} listrik {{ row.daya_listrik | int }} VA{% endif %}.
+
+Bahan bangunan: {{ row | norm_house_mat }}
+Fasilitas: {{ row | norm_facilities }}
+Tag: {{ row | norm_tag }}
+
+{% if row.description | length > 10 %}
+Deskripsi tambahan:
+{{ row.description }}
+{% endif %}
+-----

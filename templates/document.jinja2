@@ -1,0 +1,17 @@
+Harga: Rp{{ '{:,}'.format(row.price * 1000000).replace(',', '.') }}
+Alamat: {{ row.district }}, {{ row.city }}, Indonesia
+Carport: {{ row.carport | norm_scalar }}
+Dapur: {{ row.dapur | norm_scalar }}
+Daya listrik: {{ row.daya_listrik | int | norm_scalar(' watt') }}
+Jumlah lantai: {{ row.jumlah_lantai | int | norm_scalar }}
+Kamar mandi: {{ row.kamar_mandi | int | norm_scalar }}
+Kamar tidur: {{ row.kamar_tidur | int | norm_scalar }}
+Kamar pembantu: {{ row.kamar_pembantu | int | norm_scalar }}
+Lebar jalan: {{ row.lebar_jalan | int | norm_scalar(' cars') }}
+Luas tanah: {{ row.luas_tanah | norm_scalar(' m^2') }}
+Luas bangunan: {{ row.luas_bangunan | norm_scalar(' m^2') }}
+Tahun dibangun: {{ row.tahun_dibangun | int | norm_scalar }}
+Fasilitas: {{ row | norm_facilities }}
+Bahan bangunan: {{ row | norm_house_mat }}
+Tag: {{ row | norm_tag }}
+Deskripsi: {{ row.description | norm_description }}
