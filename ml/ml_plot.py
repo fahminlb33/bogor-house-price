@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 
-def plot_predictions(self, y_test, y_pred):
+def plot_predictions(y_test, y_pred):
     fig = plt.figure(figsize=(10, 5))
     plt.scatter(y_test, y_pred)
     plt.xlabel("Actual")
@@ -11,7 +11,7 @@ def plot_predictions(self, y_test, y_pred):
     return fig
 
 
-def plot_residuals(self, y_test, y_pred):
+def plot_residuals(y_test, y_pred):
     fig = plt.figure(figsize=(10, 5))
     plt.scatter(y_test, y_test - y_pred, color="blue", alpha=0.5)
     plt.axhline(y=0, color="r", linestyle="-")
@@ -22,7 +22,7 @@ def plot_residuals(self, y_test, y_pred):
     return fig
 
 
-def plot_distributions(self, y_test, y_pred):
+def plot_distributions(y_test, y_pred):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
     ax1.hist(y_test, bins=50)

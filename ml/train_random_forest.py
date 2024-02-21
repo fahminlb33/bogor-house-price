@@ -1,5 +1,4 @@
 import os
-import logging
 import argparse
 import datetime
 
@@ -50,39 +49,49 @@ class TrainRandomForest(TrainerMixin):
         self.X = self.df.drop(columns=["price"])
         self.y = self.df["price"]
 
-        # select columns
-        num_cols = [
-            "lebar_jalan", "daya_listrik", "luas_bangunan", "luas_tanah",
-            "carport", "garasi", "dapur", "jumlah_lantai",
-            "kamar_mandi_pembantu", "kamar_pembantu", "kamar_mandi",
-            "kamar_tidur"
+        # identify columns
+        self.multihot_cols = []
+        self.multihot_cols.extend(
+            [col for col in self.df.columns if col.startswith("floor_mat_")])
+        self.multihot_cols.extend(
+            [col for col in self.df.columns if col.startswith("house_mat_")])
+        self.multihot_cols.extend(
+            [col for col in self.df.columns if col.startswith("facility_")])
+        self.multihot_cols.extend(
+            [col for col in self.df.columns if col.startswith("tag_")])
+
+        # extra features not included in tags_
+        extra_tags = [
+            "ruang_tamu", "ruang_makan", "terjangkau_internet", "hook"
         ]
 
-        num_cols = [col for col in num_cols if col in self.df.columns]
-        cat_cols = [
-            col for col in self.df.select_dtypes(include="object").columns
-            if col != "price"
+        for tag in extra_tags:
+            if tag in self.df.columns:
+                self.multihot_cols.append(tag)
+
+        # categorical columns
+        self.cat_cols = [
+            col for col in self.df.select_dtypes(include=["object"]).columns
         ]
-        passthrough_cols = list(
-            set(self.df.columns) - set(cat_cols + num_cols + ["price"]))
 
-        logging.info("Used features: %s",
-                     ";".join(passthrough_cols + cat_cols + num_cols))
+        # numerical columns
+        self.num_cols = list(
+            set(self.df.columns) -
+            set(self.multihot_cols + self.cat_cols + ["price"]))
 
-        # create encoders
-        categorical_encoder = Pipeline(steps=[
+        # create preprocessing pipeline
+        catl_encoder = Pipeline(steps=[
             ("encoder", OneHotEncoder(handle_unknown="ignore")),
         ])
 
-        numerical_encoder = Pipeline(steps=[
+        num_encoder = Pipeline(steps=[
             ("scaler", MinMaxScaler()),
         ])
 
-        # create transformer
         self.compose_transformers = ColumnTransformer(transformers=[
-            ("passthrough", "passthrough", passthrough_cols),
-            ("catergorical_encoder", categorical_encoder, cat_cols),
-            ("numerical_encoder", numerical_encoder, num_cols),
+            ("passthrough", "passthrough", self.multihot_cols),
+            ("catergorical_encoder", catl_encoder, self.cat_cols),
+            ("numerical_encoder", num_encoder, self.num_cols),
         ])
 
     def train(self):
@@ -110,7 +119,7 @@ class TrainRandomForest(TrainerMixin):
         clf.fit(self.X, self.y)
 
         # --- save model
-        logging.info("Saving model...")
+        self.logger.info("Saving model...")
         joblib.dump(clf, os.path.join(self.output_path, "model.joblib"))
 
         # --- save model importance
@@ -151,13 +160,13 @@ class TrainRandomForest(TrainerMixin):
         fig.savefig(os.path.join(self.output_path, "importance.png"))
 
     def run(self):
-        logging.info("Creating output directory...")
+        self.logger.info("Creating output directory...")
         os.makedirs(self.output_path, exist_ok=True)
 
-        logging.info("Loading dataset...")
+        self.logger.info("Loading dataset...")
         self.load_data()
 
-        logging.info("Training model...")
+        self.logger.info("Training model...")
         self.train()
 
 
@@ -168,9 +177,10 @@ if __name__ == "__main__":
     # setup command-line arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset",
-                        help="Input dataset from L3",
-                        default="./dataset/etl/L3.regression_train.parquet")
+    parser.add_argument(
+        "--dataset",
+        help="Input dataset from L3",
+        default="./dataset/curated/marts_ml_train_sel_all.parquet")
     parser.add_argument("--output-path",
                         help="Output path for model and metrics",
                         default=f"./models/random_forest-{today}")

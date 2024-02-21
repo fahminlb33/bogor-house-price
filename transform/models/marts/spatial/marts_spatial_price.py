@@ -100,7 +100,7 @@ def model(dbt, session):
 
     # normalize place names
     df_amenities["place"] = df_amenities["place"] \
-        .replace(SPATIAL_PLACE_NORM_RULES)
+     .replace(SPATIAL_PLACE_NORM_RULES)
 
     # join with average house prices
     df_spatial = df_amenities \

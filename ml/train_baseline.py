@@ -1,15 +1,20 @@
 import os
 import time
-import logging
 import argparse
+import warnings
 
-import numpy as np
-import pandas as pd
+warnings.filterwarnings("ignore")
+os.environ['PYTHONWARNINGS'] = 'ignore'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 # patch sklearn with Intel Extension for Scikit-learn
 from sklearnex import patch_sklearn
 
 patch_sklearn()
+
+import joblib
+import numpy as np
+import pandas as pd
 
 import tensorflow as tf
 
@@ -124,9 +129,9 @@ class TrainRandomForest(TrainerMixin):
 
         # create X and y
         self.X = df.drop(columns=["price"])
-        self.y = np.log(df["price"].values)
+        self.y = df["price"].values
 
-        # dataset for CatBoost and TensorFlow
+        # dataset for TensorFlow
         self.X_trans = self.compose_transformers.fit_transform(self.X)
 
     # ---- SKLEARN METHODS
@@ -168,20 +173,22 @@ class TrainRandomForest(TrainerMixin):
             ("Linear", "LinearRegression", LinearRegression()),
             ("Linear", "Lasso", Lasso()),
             ("Linear", "Ridge", Ridge()),
-            ("Linear", "BayesianRidge", BayesianRidge()),
+            ("Linear", "BayesianRidge", BayesianRidge(verbose=self.verbose)),
             ("Tree", "DecisionTreeRegressor", DecisionTreeRegressor()),
             ("KNN", "KNeighborsRegressor", KNeighborsRegressor()),
-            ("SVM", "SVR", SVR()),
-            ("SVM", "LinearSVR", LinearSVR()),
-            ("Neural Network", "MLPRegressor", MLPRegressor()),
-            ("Ensemble", "RandomForestRegressor", RandomForestRegressor()),
+            ("SVM", "SVR", SVR(verbose=self.verbose)),
+            ("SVM", "LinearSVR", LinearSVR(dual="auto", verbose=self.verbose)),
+            ("Neural Network", "MLPRegressor",
+             MLPRegressor(verbose=self.verbose)),
+            ("Ensemble", "RandomForestRegressor",
+             RandomForestRegressor(verbose=self.verbose)),
             ("Ensemble", "GradientBoostingRegressor",
-             GradientBoostingRegressor()),
+             GradientBoostingRegressor(verbose=self.verbose)),
         ]
 
         # evaluate each model
         for category, name, model in models:
-            print(f"Evaluating {category}/{name} model")
+            self.logger.info(f"Evaluating {category}/{name} model")
 
             # create classifier pipeline
             clf = Pipeline(steps=[
@@ -206,9 +213,10 @@ class TrainRandomForest(TrainerMixin):
         cv = KFold(n_splits=self.cv_split,
                    shuffle=True,
                    random_state=self.random_state)
+
         for fold_i, (train_idx, test_idx) in enumerate(cv.split(self.X,
                                                                 self.y)):
-            print(f"Training fold {fold_i + 1}")
+            self.logger.debug(f"Training fold {fold_i + 1}")
 
             # split data
             X_train, X_test = self.X.iloc[train_idx], self.X.iloc[test_idx]
@@ -222,13 +230,14 @@ class TrainRandomForest(TrainerMixin):
                              label=y_test,
                              cat_features=self.cat_cols)
 
-            # train model
+            # create model
             log_dir = self.get_tensorboard_logdir("catboost", fold_i)
             model = CatBoostRegressor(verbose=self.verbose,
                                       random_seed=self.random_state,
                                       task_type="GPU",
                                       train_dir=log_dir)
 
+            # fit model
             fit_time_start = time.time()
             model.fit(train_pool, eval_set=test_pool, verbose=self.verbose)
             fit_time_end = time.time()
@@ -249,6 +258,14 @@ class TrainRandomForest(TrainerMixin):
                 "category": "CatBoost",
                 "name": f"CatBoostRegressor",
             })
+
+            del model
+            del train_pool
+            del test_pool
+            del X_train
+            del X_test
+            del y_train
+            del y_test
 
     # ---- TENSORFLOW METHODS
 
@@ -281,9 +298,10 @@ class TrainRandomForest(TrainerMixin):
         cv = KFold(n_splits=self.cv_split,
                    shuffle=True,
                    random_state=self.random_state)
+
         for fold_i, (train_idx,
                      test_idx) in enumerate(cv.split(self.X_trans, self.y)):
-            print(f"Training fold {fold_i + 1}")
+            self.logger.debug(f"{fold_i + 1}")
 
             # split data
             X_train, X_test = self.X_trans[train_idx], self.X_trans[test_idx]
@@ -336,25 +354,34 @@ class TrainRandomForest(TrainerMixin):
                 "name": "DNNRegressor",
             })
 
+            del model
+            del train_ds
+            del test_ds
+            del X_train
+            del X_test
+            del y_train
+            del y_test
+
     # --- MAIN METHODS
 
     def train(self):
         # print tensorflow devices
-        logging.info("TensorFlow devices: %s",
-                     tf.config.list_physical_devices())
+        for device in tf.config.list_physical_devices():
+            self.logger.info("TensorFlow device: %s (%s)", device.name,
+                             device.device_type)
 
         # create tensorboard logs directory
         os.makedirs(os.path.join(self.output_dir, f"{self.run_name}_logs"),
                     exist_ok=True)
 
         # run training
-        logging.info("Training sklearn models")
+        self.logger.info("Training sklearn models")
         self.train_sklearn()
 
-        logging.info("Training CatBoost models")
+        self.logger.info("Training CatBoost models")
         self.train_catboost()
 
-        logging.info("Training TensorFlow models")
+        self.logger.info("Training TensorFlow models")
         self.train_tensorflow()
 
         # save metrics
@@ -382,7 +409,7 @@ if __name__ == "__main__":
         default="./dataset/curated/marts_ml_train_sel_all.parquet")
     parser.add_argument("--output-dir",
                         help="Output directory for training metrics",
-                        default="./dataset/baseline")
+                        default="./ml_models/baseline")
     parser.add_argument("--batch-size",
                         help="Batch size for TensorFlow",
                         default=TRAIN_BASELINE_BATCH_SIZE)

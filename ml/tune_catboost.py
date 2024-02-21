@@ -1,21 +1,17 @@
-import optuna
+import argparse
 import mlflow
+import optuna
 
 import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 
-from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
+from catboost import CatBoostRegressor, Pool
 from sklearn.model_selection import KFold
-from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error, r2_score
 
 from ml_plot import plot_distributions, plot_residuals, plot_predictions
-
-DATASET_PATH = "./dataset/etl/L2.regression_inliers.parquet"
 
 mlflow.set_tracking_uri("http://10.20.20.102:8009")
 
@@ -40,63 +36,43 @@ class Objective():
         self.X = self.df.drop(columns=["price"])
         self.y = self.df["price"]
 
-        # select columns
-        floor_mat_cols = [
-            col for col in self.df.columns if col.startswith("floor_mat_")
+        # identify columns
+        self.cat_cols = [
+            col for col in self.df.select_dtypes(include=["object"]).columns
         ]
-        house_mat_cols = [
-            col for col in self.df.columns if col.startswith("house_mat_")
-        ]
-        tags_cols = [col for col in self.df.columns if col.startswith("tags_")
-                    ] + [
-                        "hook_available", "ruang_tamu_available",
-                        "ruang_makan_available", "terjangkau_internet_available"
-                    ]
-
-        cat_cols = [
-            "kondisi_perabotan_norm", "kondisi_properti_norm",
-            "konsep_dan_gaya_rumah", "sumber_air", "pemandangan", "sertifikat"
-        ]
-        num_cols = [
-            "lebar_jalan_num", "daya_listrik_num", "luas_bangunan_num",
-            "luas_tanah_num", "carport", "garasi", "dapur", "jumlah_lantai",
-            "kamar_mandi_pembantu", "kamar_pembantu", "kamar_mandi",
-            "kamar_tidur"
-        ]
-
-        # create encoders
-        categorical_encoder = Pipeline(steps=[
-            ("encoder", OneHotEncoder(handle_unknown="ignore")),
-        ])
-
-        numerical_encoder = Pipeline(steps=[
-            ("scaler", MinMaxScaler()),
-        ])
-
-        # create transformer
-        self.compose_transformers = ColumnTransformer(transformers=[
-            ("passthrough", "passthrough",
-             tags_cols + floor_mat_cols + house_mat_cols),
-            ("catergorical_encoder", categorical_encoder, cat_cols),
-            ("numerical_encoder", numerical_encoder, num_cols),
-        ])
 
     def __call__(self, trial: optuna.Trial):
         with mlflow.start_run(run_name=f"trial-{trial.number}"):
             # create hyperparameters
+            # from: https://github.com/optuna/optuna-examples/blob/main/catboost/catboost_pruning.py
             params = {
-                "n_estimators":
-                    trial.suggest_int("n_estimators", 200, 2000, step=10),
-                "max_depth":
-                    trial.suggest_int("max_depth", 10, 110, step=10),
-                "min_samples_split":
-                    trial.suggest_categorical("min_samples_split", [2, 5, 10]),
-                "min_samples_leaf":
-                    trial.suggest_categorical("min_samples_leaf", [1, 2, 4]),
-                "bootstrap":
-                    trial.suggest_categorical("bootstrap", [True, False]),
-                "max_features":
-                    trial.suggest_categorical("max_features_2", [None, "sqrt"]),
+                "iterations":
+                    trial.suggest_int("iterations", 10, 1000),
+                "depth":
+                    trial.suggest_int("depth", 1, 12),
+                # "colsample_bylevel": trial.suggest_float("colsample_bylevel", 0.01, 1.0, log=True),
+                "subsample":
+                    trial.suggest_float("subsample", 0.1, 1, log=True),
+                "grow_policy":
+                    trial.suggest_categorical(
+                        "grow_policy",
+                        ["SymmetricTree", "Depthwise", "Lossguide"]),
+                "learning_rate":
+                    trial.suggest_float("learning_rate", 1e-3, 0.1, log=True),
+                "min_data_in_leaf":
+                    trial.suggest_int("min_data_in_leaf", 1, 100),
+
+                # fixed hyperparameters
+                "task_type":
+                    "GPU",
+                "objective":
+                    "RMSE",
+                "bootstrap_type":
+                    "Bernoulli",
+                "random_seed":
+                    21,
+                "verbose":
+                    0,
             }
 
             # create scores
@@ -120,19 +96,25 @@ class Objective():
                 X_train, X_test = self.X.iloc[train_idx], self.X.iloc[test_idx]
                 y_train, y_test = self.y.iloc[train_idx], self.y.iloc[test_idx]
 
-                # create pipeline
-                clf = Pipeline(steps=[
-                    ("preprocessor", self.compose_transformers),
-                    ("regressor",
-                     RandomForestRegressor(**params, n_jobs=4, random_state=21)
-                    ),
-                ])
+                # create pool
+                train_pool = Pool(data=X_train,
+                                  label=y_train,
+                                  cat_features=self.cat_cols)
+                test_pool = Pool(data=X_test,
+                                 label=y_test,
+                                 cat_features=self.cat_cols)
+
+                # create model
+                model = CatBoostRegressor(**params)
 
                 # fit model
-                clf.fit(X_train, y_train)
+                model.fit(train_pool,
+                          eval_set=test_pool,
+                          verbose=0,
+                          early_stopping_rounds=100)
 
                 # run prediction
-                y_pred = clf.predict(X_test)
+                y_pred = model.predict(X_test)
 
                 # log metrics
                 scores["mean"].append(np.mean(y_pred))
@@ -165,22 +147,32 @@ class Objective():
 
 
 if __name__ == "__main__":
+    # setup command-line arguments
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--dataset",
+        help="Input dataset from L3",
+        default="./dataset/curated/marts_ml_train_sel_all.parquet")
+
+    args = parser.parse_args()
+
     # change matplotlib backend
     matplotlib.use("Agg")
 
     # create objective
-    objective = Objective(DATASET_PATH)
+    objective = Objective(args.dataset)
 
     # load dataset
     objective.load_data()
 
     # create mlflow experiment
-    experiment_id = get_or_create_experiment("Project House Price: Random Forest")
+    experiment_id = get_or_create_experiment("Project House Price: CatBoost")
     mlflow.set_experiment(experiment_id=experiment_id)
 
     # create study
     study = optuna.create_study(direction="minimize",
-                                study_name="random_forest",
+                                study_name="catboost",
                                 storage="sqlite:///bogor_houses.db",
                                 load_if_exists=True)
     study.optimize(objective, n_trials=100)

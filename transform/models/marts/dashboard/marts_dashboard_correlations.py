@@ -17,7 +17,7 @@ def model(dbt, session):
     df = dbt.ref("int_ml_feature_outlier_removal")
 
     # get the price field
-    price_col = np.log(list(map(lambda x: x[0], df.select("price").fetchall())))
+    price_col = list(map(lambda x: x[0], df.select("price").fetchall()))
 
     # calculate point biserial/pearson correlation for each column
     corrs = []
