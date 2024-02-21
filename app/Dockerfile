@@ -9,14 +9,29 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # install dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+	curl \
+	locales \
+    build-essential \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+# update pip
 RUN pip install --upgrade pip
 
+# install python dependencies
 COPY ./requirements.txt .
-
 RUN pip install -r requirements.txt
 
 # copy project
 COPY . .
 
+# expose port
+EXPOSE 8000
+
+# add health check
+HEALTHCHECK CMD curl --fail http://localhost:8000/_stcore/health
+
 # start app
-CMD ["gunicorn", "--workers", "4", "--forwarded-allow-ips", "*", "--bind", "0.0.0.0:8000", "app:create_app()"]
+CMD ["streamlit", "run", "Dasbor.py", "--server.port=8000", "--server.address=0.0.0.0"]
