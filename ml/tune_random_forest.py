@@ -175,7 +175,8 @@ if __name__ == "__main__":
     objective.load_data()
 
     # create mlflow experiment
-    experiment_id = get_or_create_experiment("Project House Price: Random Forest")
+    experiment_id = get_or_create_experiment(
+        "Project House Price: Random Forest")
     mlflow.set_experiment(experiment_id=experiment_id)
 
     # create study
