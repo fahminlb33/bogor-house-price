@@ -168,10 +168,7 @@ crawls/
 
 # data
 dataset/
-models/
-
-# dbt project
-!transform/models/
+ml_models/
 
 # credentials
 CREDENTIALS
