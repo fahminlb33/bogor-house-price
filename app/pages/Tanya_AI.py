@@ -73,6 +73,9 @@ def main():
         page_icon="👋",
     )
 
+    # to prevent http referer
+    st.markdown("<meta name='referrer' content='no-referrer'>", unsafe_allow_html=True)
+
     # set cookie manager
     cookie_manager = stx.CookieManager()
     ensure_user_has_session(cookie_manager)
