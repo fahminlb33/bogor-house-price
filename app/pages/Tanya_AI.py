@@ -55,7 +55,7 @@ def render_chat(message: ChatRecord):
                     cols = st.columns(5)
 
                 # format price
-                price = f"Rp{result.price:,.0f}jt" if result.price < 1000 else f"Rp{result.price:,.0f}m"
+                price = f"Rp{result.price:,.0f}jt" if result.price < 1000 else f"Rp{(result.price / 1000):,.0f}m"
                 with cols[i % 5]:
                     st.image(result.main_image_url)
                     st.markdown(
