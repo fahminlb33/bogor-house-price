@@ -55,7 +55,8 @@ class CreateEmbeddingsPipeline(TrainerMixin):
                             price=row.price,
                             district=row.district,
                             city=row.city,
-                            url=row.url)
+                            url=row.url,
+                            main_image_url=row.main_image_url)
 
             documents.append(
                 Document(id=row.id, content=contents, meta=metadata))
@@ -64,13 +65,14 @@ class CreateEmbeddingsPipeline(TrainerMixin):
 
     def train(self):
         # create document store
+        hnsw = dict(m=16, ef_construct=100)
         document_store = QdrantDocumentStore(host=self.qdrant_host,
                                              port=self.qdrant_port,
                                              grpc_port=self.qdrant_port_grpc,
-                                             prefer_grpc=self.qdrant_port_grpc > 0,
+                                             prefer_grpc=True,
                                              index=self.qdrant_collection_name,
                                              embedding_dim=1536,
-                                             hnsw_config=dict(m=16, ef_construct=100),
+                                             hnsw_config=hnsw,
                                              return_embedding=True,
                                              wait_result_from_api=True)
 
@@ -166,4 +168,5 @@ if __name__ == "__main__":
         splitter_chunk_overlap=args.chunk_overlap,
         openai_model=args.openai_model,
         template_name=args.template_name)
+
     embedder.run()
