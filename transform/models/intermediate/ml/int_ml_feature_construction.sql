@@ -3,7 +3,7 @@ house_full AS (
 	SELECT
 		*
 	FROM
-		{{ ref('stg_rumah123_houses') }} AS houses
+		{{ ref('int_rumah123_houses') }} AS houses
 	LEFT JOIN
 		{{ ref('int_rumah123_specs') }}  AS house_specs ON house_specs.reference_id = houses.id
 	LEFT JOIN

@@ -1,0 +1,388 @@
+version: 2
+
+x-columns: &x-columns
+  columns:
+      # general info
+      - name: id
+        description: Unique property listing ID
+        tests:
+          - not_null
+          - unique
+      - name: price
+        description: House price in million IDR
+        tests:
+          - not_null
+      - name: installment
+        description: House installment per month in million IDR
+        tests:
+          - not_null
+      - name: district
+        description: House district location
+        tests:
+          - not_null
+      - name: city
+        description: House city location
+        tests:
+          - not_null
+      - name: description
+        description: House property manually entered description
+        tests:
+          - not_null
+      - name: url
+        description: House property listing URL to Rumah123
+        tests:
+          - not_null
+      - name: last_modified
+        description: House property last modified date
+        tests:
+          - not_null
+      - name: scraped_at
+        description: House property scraped date
+        tests:
+          - not_null
+
+      # specs
+      # --- numerical columns
+      - name: kamar_tidur
+        description: Number of bedrooms
+        tests:
+          - not_null
+      - name: kamar_mandi
+        description: Number of bathrooms
+        tests:
+          - not_null
+      - name: kamar_pembantu
+        description: Number of maid rooms
+        tests:
+          - not_null
+      - name: kamar_mandi_pembantu
+        description: Number of maid bathrooms
+        tests:
+          - not_null
+      - name: dapur
+        description: Number of kitchens
+        tests:
+          - not_null
+      - name: luas_tanah
+        description: Land area in square meters
+        tests:
+          - not_null
+      - name: luas_bangunan
+        description: Building area in square meters
+        tests:
+          - not_null
+      - name: jumlah_lantai
+        description: Number of floors
+        tests:
+          - not_null
+      - name: carport
+        description: Number of carports
+        tests:
+          - not_null
+      - name: daya_listrik
+        description: Electricity capacity in watts
+        tests:
+          - not_null
+      - name: lebar_jalan
+        description: Road width in number of cars
+        tests:
+          - not_null
+      - name: tahun_dibangun
+        description: Year the building was built
+        tests:
+          - not_null
+      - name: tahun_di_renovasi
+        description: Year the building was last renovated
+        tests:
+          - not_null
+
+      # --- categorical columns
+      - name: tipe_properti
+        description: Type of property
+        tests:
+          - not_null
+      - name: sertifikat
+        description: Certificate type
+        tests:
+          - not_null
+      - name: kondisi_properti
+        description: Property condition
+        tests:
+          - not_null
+      - name: kondisi_perabotan
+        description: Furniture condition
+        tests:
+          - not_null
+      - name: hadap
+        description: Building orientation
+        tests:
+          - not_null
+      - name: konsep_dan_gaya_rumah
+        description: House concept and style
+        tests:
+          - not_null
+      - name: pemandangan
+        description: View from the property
+        tests:
+          - not_null
+      - name: sumber_air
+        description: Water source
+        tests:
+          - not_null
+      - name: garasi
+        description: Number of garages
+        tests:
+          - not_null
+
+      # --- boolean columns
+      - name: ruang_makan
+        description: Has dining room
+        tests:
+          - not_null
+      - name: ruang_tamu
+        description: Has living room
+        tests:
+          - not_null
+      - name: terjangkau_internet
+        description: Has internet connectivity
+        tests:
+          - not_null
+      - name: hook
+        description: Has hook for cable TV
+        tests:
+          - not_null
+
+      # house material
+      - name: house_mat_bata_hebel
+        description: Has bata hebel material in the house
+        tests:
+          - not_null
+      - name: house_mat_bata_merah
+        description: Has bata merah material in the house
+        tests:
+          - not_null
+      - name: house_mat_beton
+        description: Has concrete material in the house
+        tests:
+          - not_null
+      - name: house_mat_batako
+        description: Has batako material in the house
+        tests:
+          - not_null
+
+      # floor material
+      - name: floor_mat_granit
+        description: Has granite floor in the house
+        tests:
+          - not_null
+      - name: floor_mat_keramik
+        description: Has ceramic floor in the house
+        tests:
+          - not_null
+      - name: floor_mat_ubin
+        description: Has ubin floor in the house
+        tests:
+          - not_null
+      - name: floor_mat_marmer
+        description: Has marmer floor in the house
+        tests:
+          - not_null
+      - name: floor_mat_vinyl
+        description: Has vinyl floor in the house
+        tests:
+          - not_null
+
+      # facilities
+      - name: facility_keamanan
+        description: Whether the house has security facilities (guards, CCTV, etc.)
+        tests:
+          - not_null
+      - name: facility_ac
+        description: Whether the house has air conditioning
+        tests:
+          - not_null
+      - name: facility_lapangan
+        description: Whether the house has a sports field
+        tests:
+          - not_null
+      - name: facility_taman
+        description: Whether the house has a garden
+        tests:
+          - not_null
+      - name: facility_laundry
+        description: Whether the house has a laundry room
+        tests:
+          - not_null
+      - name: facility_masjid
+        description: Whether the house has a mosque
+        tests:
+          - not_null
+      - name: facility_wastafel
+        description: Whether the house has a sink
+        tests:
+          - not_null
+      - name: facility_one_gate_system
+        description: Whether the house has a one-gate system
+        tests:
+          - not_null
+      - name: facility_dapur
+        description: Whether the house has a kitchen
+        tests:
+          - not_null
+      - name: facility_jalur_telepon
+        description: Whether the house has a telephone line
+        tests:
+          - not_null
+      - name: facility_kolam_renang
+        description: Whether the house has a swimming pool
+        tests:
+          - not_null
+      - name: facility_playground
+        description: Whether the house has a playground
+        tests:
+          - not_null
+      - name: facility_parkir
+        description: Whether the house has a parking area
+        tests:
+          - not_null
+      - name: facility_gym
+        description: Whether the house has a gym
+        tests:
+          - not_null
+      - name: facility_water_heater
+        description: Whether the house has a water heater
+        tests:
+          - not_null
+      - name: facility_kolam_ikan
+        description: Whether the house has a fish pond
+        tests:
+          - not_null
+      - name: facility_carport
+        description: Whether the house has a carport
+        tests:
+          - not_null
+      - name: facility_air_pam
+        description: Whether the house has a water from the city water company
+        tests:
+          - not_null
+      - name: facility_halaman
+        description: Whether the house has a yard
+        tests:
+          - not_null
+      - name: facility_balcony
+        description: Whether the house has a balcony
+        tests:
+          - not_null
+      - name: facility_internet
+        description: Whether the house has internet connectivity
+        tests:
+          - not_null
+      - name: facility_air_tanah
+        description: Whether the house has a water from the ground
+        tests:
+          - not_null
+      - name: facility_water_tank
+        description: Whether the house has a water tank
+        tests:
+          - not_null
+      - name: facility_dishwasher
+        description: Whether the house has a dishwasher
+        tests:
+          - not_null
+      - name: facility_garasi
+        description: Whether the house has a garage
+        tests:
+          - not_null
+      - name: facility_aula
+        description: Whether the house has an aula
+        tests:
+          - not_null
+      - name: facility_shed
+        description: Whether the house has a shed
+        tests:
+          - not_null
+      - name: facility_canopy
+        description: Whether the house has a canopy
+        tests:
+          - not_null
+      - name: facility_gas
+        description: Whether the house has a gas line
+        tests:
+          - not_null
+      - name: facility_heating
+        description: Whether the house has a heating system
+        tests:
+          - not_null
+      - name: facility_musholla
+        description: Whether the house has a musholla
+        tests:
+          - not_null
+      - name: facility_floorboards
+        description: Whether the house has floorboards
+        tests:
+          - not_null
+      - name: facility_mezzanine
+        description: Whether the house has a mezzanine
+        tests:
+          - not_null
+      - name: facility_lemari_sepatu
+        description: Whether the house has a shoe rack
+        tests:
+          - not_null
+      - name: facility_lemari_pakaian
+        description: Whether the house has a wardrobe
+        tests:
+          - not_null
+
+      # tags
+      - name: tag_bisa_nego
+        description: Whether the price is negotiable
+        tests:
+          - not_null
+      - name: tag_cash_keras
+        description: Whether you can pay in cash
+        tests:
+          - not_null
+      - name: tag_komplek
+        description: Whether the house is in a complex
+        tests:
+          - not_null
+      - name: tag_perumahan
+        description: Whether the house is in a housing estate
+        tests:
+          - not_null
+      - name: tag_kpr
+        description: Whether the house is eligible for a mortgage
+        tests:
+          - not_null
+      - name: tag_one_gate_system
+        description: Whether the house is in a one-gate system
+        tests:
+          - not_null
+      - name: tag_cash_bertahap
+        description: Whether you can pay in installments
+        tests:
+          - not_null
+      - name: tag_dijual_cepat
+        description: Whether the house is for quick sale
+        tests:
+          - not_null
+      - name: tag_pinggir_jalan
+        description: Whether the house is on the side of the road
+        tests:
+          - not_null
+      - name: tag_pedesaan
+        description: Whether the house is in a rural area
+        tests:
+          - not_null
+      - name: tag_masuk_gang
+        description: Whether the house is in a small alley
+        tests:
+          - not_null
+
+models:
+  - name: int_ml_feature_imputation
+    description: Basic house property listing information
+    config:
+      tags: ["intermediate", "ml", "no nulls"]
+    <<: *x-columns

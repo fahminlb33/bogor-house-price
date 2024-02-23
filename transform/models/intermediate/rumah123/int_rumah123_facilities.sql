@@ -13,6 +13,6 @@ WITH base AS (
 )
 
 SELECT
-	* EXCLUDE(facility_None)
+	*
 FROM
 	base

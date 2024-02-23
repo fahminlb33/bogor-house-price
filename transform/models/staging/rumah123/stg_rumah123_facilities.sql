@@ -5,10 +5,19 @@ house_facilities AS (
         id as reference_id
     FROM
         {{ source('raw_rumah123', 'houses') }}
+),
+cleaned AS (
+	SELECT
+		clean_facility(facility_name) AS facility,
+		reference_id
+	FROM
+		house_facilities
 )
 
 SELECT
-    clean_facility(facility_name) AS facility,
-	reference_id
+	*
 FROM
-    house_facilities
+	cleaned
+WHERE
+	facility IS NOT NULL
+

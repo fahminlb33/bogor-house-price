@@ -330,7 +330,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['Timur', 'Selatan', 'Barat', 'Utara', 'Timur Laut', 'Tenggara', 'Barat Daya', 'Barat Laut']
+              values: ['Utara', 'Timur Laut', 'Timur', 'Tenggara', 'Selatan', 'Barat Daya', 'Barat', 'Barat Laut']
       - name: konsep_dan_gaya_rumah
         description: House concept and style
         tests:
@@ -359,18 +359,26 @@ models:
         description: Has dining room
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: ruang_tamu
         description: Has living room
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: terjangkau_internet
         description: Has internet connectivity
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: hook
         description: Has hook for cable TV
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
 
   - name: int_rumah123_tags
     description: Extra information about the property in boolean form
@@ -389,44 +397,66 @@ models:
         description: Whether the price is negotiable
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: tag_cash_keras
         description: Whether you can pay in cash
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: tag_komplek
         description: Whether the house is in a complex
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: tag_perumahan
         description: Whether the house is in a housing estate
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: tag_kpr
         description: Whether the house is eligible for a mortgage
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: tag_one_gate_system
         description: Whether the house is in a one-gate system
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: tag_cash_bertahap
         description: Whether you can pay in installments
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: tag_dijual_cepat
         description: Whether the house is for quick sale
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: tag_pinggir_jalan
         description: Whether the house is on the side of the road
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: tag_pedesaan
         description: Whether the house is in a rural area
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
       - name: tag_masuk_gang
         description: Whether the house is in a small alley
         tests:
           - not_null
+          - accepted_values:
+              values: [0, 1]
 
