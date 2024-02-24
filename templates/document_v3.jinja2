@@ -1,0 +1,13 @@
+Dijual rumah (kode: {{ id }}) dengan harga Rp{{ '{:,.0f}'.format(price * 1000000).replace(',', '.') }} dan cicilan Rp{{ '{:,.0f}'.format(installment * 1000000).replace(',', '.') }} beralamat di {{ district }}, {{ city }}, Indonesia.
+Luas tanah {{ luas_tanah }} meter persegi dengan luas bangunan {{ luas_bangunan }} meter persegi{% if tahun_dibangun > 0 %} dan dibangun pada tahun {{ tahun_dibangun | int }}{% endif %}{% if tahun_di_renovasi > 0 %} dan terakhir direnovasi pada tahun {{ tahun_di_renovasi | int }}{% endif %}.
+Rumah {{ kondisi_properti }} menghadap {{ hadap }} dengan gaya {{ konsep_dan_gaya_rumah }} dan pemandangan {{ pemandangan }} ini terdiri atas {{ jumlah_lantai | num_max(1) | int }} lantai dengan {{ kamar_tidur | int }} kamar tidur, {{ kamar_mandi | int }} kamar mandi{% if kamar_pembantu > 0 %}, dan {{ kamar_pembantu | int }} kamar pembantu{% endif %}.
+Spesifikasi rumah terdapat {% if carport > 0 %}{{ carport }} carport, {% endif %}{% if lebar_jalan > 0 %}jalan muat {{ lebar_jalan | int }} mobil,{% endif %}{% if dapur > 0 %} {{ dapur }} dapur,{% endif %}{% if daya_listrik > 0 %} listrik {{ daya_listrik | int }} VA{% endif %}{% if ruang_tamu > 0 %}, sumber air {{ sumber_air }}, bersertifikat {{ sertifikat }}, ruang tamu{% endif %}{% if ruang_makan > 0 %}, ruang makan{% endif %}, dan kondisi perabotan {{ kondisi_perabotan }}.
+{% if (house_material is not none) or (floor_material is not none) %}Rumah ini memiliki {% if (house_material is not none) %}material bangunan {{ house_material | join(', ') }}{% endif %} {% if floor_material is not none %}{% if house_material is not none %}dan{% endif %} material lantai {{ floor_material | join(', ') }}{% endif %}{% endif %}.
+Fasilitas lain yang ditawarkan rumah ini adalah {% if (facilities is not none) %}{{ facilities | join(', ') }},{% endif %}{% if (tags is not none) %}{{ tags | join(', ') }}{% endif %}{% if hook > 0 %}, hook{% endif %}{% if terjangkau_internet > 0 %}, terjangkau internet{% endif %}.
+
+{% if (description is not none) and (description | length > 10) %}
+Berikut adalah deskripsi tambahan sebagai pelengkap. Tetap gunakan informasi di atas sebagai sumber utama.
+
+{{ description }}
+{% endif %}
+-----

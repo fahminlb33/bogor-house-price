@@ -4,38 +4,7 @@ import pathlib
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
-class EmbeddingDocumentTemplateEngine(object):
-
-    def __init__(self, template_name: str) -> None:
-        # find template path
-        template_path = pathlib.Path(__file__) \
-            .parent \
-            .parent \
-            .resolve() \
-            .joinpath('templates')
-
-        # create Jinja environment
-        fs_loader = FileSystemLoader(template_path)
-        self.env = Environment(loader=fs_loader, autoescape=select_autoescape())
-
-        # add custom filters
-        self.env.filters[
-            'norm_description'] = EmbeddingDocumentTemplateEngine.norm_description
-        self.env.filters[
-            'norm_facilities'] = EmbeddingDocumentTemplateEngine.norm_facilities
-        self.env.filters[
-            'norm_house_mat'] = EmbeddingDocumentTemplateEngine.norm_house_mat
-        self.env.filters['norm_tag'] = EmbeddingDocumentTemplateEngine.norm_tag
-        self.env.filters[
-            'norm_scalar'] = EmbeddingDocumentTemplateEngine.norm_scalar
-        self.env.filters['num_max'] = EmbeddingDocumentTemplateEngine.num_max
-
-        # load template
-        self.template = self.env.get_template(template_name)
-
-    def __call__(self, tp: dict) -> str:
-        return self.template.render(row=tp)
-
+class CustomFilters(object):
     @staticmethod
     def norm_description(s: str) -> str:
         # remove emojis
@@ -59,60 +28,6 @@ class EmbeddingDocumentTemplateEngine(object):
         return s
 
     @staticmethod
-    def norm_facilities(tp) -> str:
-        s = ""
-
-        if tp.facility_ac > 0:
-            s += "AC, "
-        if tp.facility_keamanan > 0:
-            s += "keamanan/satpam, "
-        if tp.facility_laundry > 0:
-            s += "laundry, "
-        if tp.facility_masjid > 0:
-            s += "masjid, "
-        if tp.ruang_makan > 0:
-            s += "ruang makan, "
-        if tp.ruang_tamu > 0:
-            s += "ruang tamu, "
-
-        if s == "":
-            return "tidak disebutkan"
-
-        return s[:-2]
-
-    @staticmethod
-    def norm_house_mat(tp) -> str:
-        s = ""
-
-        if tp.house_mat_bata_hebel > 0:
-            s += "bata hebel, "
-        if tp.house_mat_bata_merah > 0:
-            s += "bata merah, "
-
-        if s == "":
-            return "tidak disebutkan"
-
-        return s[:-2]
-
-    @staticmethod
-    def norm_tag(tp) -> str:
-        s = ""
-
-        if tp.tag_cash_bertahap > 0:
-            s += "cash bertahap, "
-        if tp.tag_komplek > 0:
-            s += "komplek, "
-        if tp.tag_kpr > 0:
-            s += "KPR, "
-        if tp.tag_perumahan > 0:
-            s += "perumahan, "
-
-        if s == "":
-            return "tidak disebutkan"
-
-        return s[:-2]
-
-    @staticmethod
     def norm_scalar(s: float | int,
                     suffix: str = '',
                     default_value: str = 'tidak disebutkan') -> str:
@@ -126,3 +41,30 @@ class EmbeddingDocumentTemplateEngine(object):
         if x > y:
             return x
         return y
+
+class EmbeddingDocumentTemplateEngine(object):
+
+    def __init__(self, template_name: str) -> None:
+        # find template path
+        template_path = pathlib.Path(__file__) \
+            .parent \
+            .parent \
+            .resolve() \
+            .joinpath('templates')
+
+        # create Jinja environment
+        fs_loader = FileSystemLoader(template_path)
+        self.env = Environment(loader=fs_loader, autoescape=select_autoescape())
+
+        # add custom filters
+        self.env.filters['norm_description'] = CustomFilters.norm_description
+        self.env.filters['norm_scalar'] = CustomFilters.norm_scalar
+        self.env.filters['num_max'] = CustomFilters.num_max
+
+        # load template
+        self.template = self.env.get_template(template_name)
+
+    def __call__(self, tp: dict) -> str:
+        return self.template.render(**tp)
+
+

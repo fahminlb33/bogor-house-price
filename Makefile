@@ -20,3 +20,7 @@ dev:
 
 etl:
 	cd transform && dbt run && dbt docs generate
+
+etl_test:
+	cd transform && dbt test
+

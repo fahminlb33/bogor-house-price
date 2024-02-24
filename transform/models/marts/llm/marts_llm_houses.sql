@@ -82,7 +82,7 @@ house_images AS (
 	GROUP BY
 		reference_id
 ),
-final AS (
+staging AS (
 	SELECT
 		*
 	FROM
@@ -98,7 +98,13 @@ final AS (
 	LEFT JOIN
 		house_facility ON house_facility.reference_id = houses.id
 	LEFT JOIN
-		house_images ON houses.id = house_images.reference_id
+		house_images ON house_images.reference_id = houses.id
+),
+final AS (
+	SELECT
+		DISTINCT ON (id) *
+	FROM
+		staging
 )
 
 SELECT
@@ -107,4 +113,3 @@ FROM
 	final
 WHERE
 	price IS NOT NULL
-LIMIT 10
