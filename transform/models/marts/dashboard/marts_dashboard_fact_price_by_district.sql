@@ -1,3 +1,5 @@
+{{ config(materialized='external', format='csv') }}
+
 WITH
 stg_houses AS (
     SELECT
@@ -11,8 +13,8 @@ final AS (
         {{ dbt_utils.generate_surrogate_key(['stg_houses.district', 'stg_houses.city']) }} AS district_sk,
 
         -- attributes
-        avg(price) AS price_avg,
-        median(price) AS price_median
+        avg(price) * 1000000 AS price_avg,
+        median(price) * 1000000  AS price_median
     FROM
         stg_houses
     GROUP BY

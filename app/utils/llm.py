@@ -61,7 +61,8 @@ def get_rag_pipeline(_document_store: QdrantDocumentStore) -> Pipeline:
     rag_pipeline = Pipeline()
 
     # add components
-    rag_pipeline.add_component("embedder", OpenAITextEmbedder())
+    rag_pipeline.add_component(
+        "embedder", OpenAITextEmbedder(model="text-embedding-3-small"))
     rag_pipeline.add_component(
         "retriever", QdrantEmbeddingRetriever(document_store=_document_store))
     rag_pipeline.add_component("rag_prompt",
@@ -78,7 +79,6 @@ def get_rag_pipeline(_document_store: QdrantDocumentStore) -> Pipeline:
     return rag_pipeline
 
 
-@st.cache_data(show_spinner=False)
 def query(_pipeline: Pipeline, question: str) -> dict:
     return _pipeline.run({
         "embedder": {

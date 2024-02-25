@@ -57,7 +57,8 @@ def render_chat(message: ChatRecord):
                 # format price
                 price = f"Rp{result.price:,.0f}jt" if result.price < 1000 else f"Rp{(result.price / 1000):,.0f}m"
                 with cols[i % 5]:
-                    st.image(result.main_image_url)
+                    if result.main_image_url:
+                        st.image(result.main_image_url)
                     st.markdown(
                         f'<div class="text-caption">{price}<br><a href="{result.url}">{result.district}, {result.city}</a></div>',
                         unsafe_allow_html=True)
@@ -74,7 +75,8 @@ def main():
     )
 
     # to prevent http referer
-    st.markdown("<meta name='referrer' content='no-referrer'>", unsafe_allow_html=True)
+    st.markdown("<meta name='referrer' content='no-referrer'>",
+                unsafe_allow_html=True)
 
     # set cookie manager
     cookie_manager = stx.CookieManager()
@@ -122,16 +124,22 @@ def main():
             # query LLM
             result = query(pipeline, prompt)
             response = result["llm"]["replies"][0]
+            print(result)
 
             # create record
-            house_records = [
-                HouseRecord(city=doc["city"],
-                            district=doc["district"],
-                            price=doc["price"],
-                            url=doc["url"],
-                            main_image_url=doc["main_image_url"])
-                for doc in result["return_docs"]["documents"]
-            ]
+            house_records = []
+            inserted_ids = []
+            for doc in result["return_docs"]["documents"]:
+                if doc.id in inserted_ids:
+                    continue
+
+                inserted_ids.append(doc.id)
+                doc.append(
+                    HouseRecord(city=doc["city"],
+                                district=doc["district"],
+                                price=doc["price"],
+                                url=doc["url"],
+                                main_image_url=doc["main_image_url"]))
 
             chat_record = ChatRecord(role="assistant",
                                      content=response,

@@ -3,24 +3,22 @@
 WITH
 stg_houses AS (
     SELECT
-        district,
-        city
+        *
     FROM
         {{ ref("stg_rumah123_houses") }}
-    GROUP BY
-        district,
-        city
 ),
 final AS (
     SELECT
         -- key
-        {{ dbt_utils.generate_surrogate_key(['district', 'city']) }} AS district_sk,
+        {{ dbt_utils.generate_surrogate_key(['stg_houses.district', 'stg_houses.city']) }} AS district_sk,
 
         -- attributes
-        district,
-        city
+        count(*) AS listing_count
     FROM
         stg_houses
+    GROUP BY
+        district,
+        city
 )
 
 SELECT * FROM final

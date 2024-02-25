@@ -2,6 +2,7 @@ import streamlit as st
 import extra_streamlit_components as stx
 
 from utils.db import track_prediction
+from utils.data_loaders import format_price
 from utils.cookies import ensure_user_has_session, get_session_id
 from utils.regression import (AVAILABLE_FACILITIES, AVAILABLE_HOUSE_MATERIAL,
                               AVAILABLE_TAGS, construct_features, load_model)
@@ -37,10 +38,8 @@ def main():
 
     st.title("🏡Prediksi Harga Rumah")
     st.markdown("""
-                Selamat datang ke layanan prediksi harga rumah!
+                Selamat datang ke layanan prediksi harga rumah! Masukkan informasi spesifikasi rumah yang ingin Anda beli pada form berikut.
                 """)
-
-    # st.image("https://source.unsplash.com/brown-and-black-wooden-house-TiVPTYCG_3E", caption="Sumber: brown and black wooden house oleh vu anh dari Unsplash")
 
     #
     # Input features
@@ -107,14 +106,12 @@ def main():
 
         # predict
         y_pred = model.predict(X_pred)
+        price = format_price(y_pred[0] * 1_000_000)
 
         # show prediction
-        price = y_pred[0] * 1_000_000
-        price = f"{price:,.0f}".replace(",", ".")
-
         st.markdown('<div class="text-center">Hasil Prediksi',
                     unsafe_allow_html=True)
-        st.markdown(f'<div class="text-center text-prediction">Rp{price}</div>',
+        st.markdown(f'<div class="text-center text-prediction">{price}</div>',
                     unsafe_allow_html=True)
 
         # track prediction

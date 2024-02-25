@@ -15,7 +15,7 @@ AVAILABLE_TAGS = ["Cash Bertahap", "KPR", "Komplek", "Perumahan"]
 @st.cache_resource
 def load_model():
     clf = CatBoostRegressor()
-    clf.load_model("assets/model.cbm")
+    clf.load_model("assets/model/house_price_reg.cbm")
 
     return clf
 
