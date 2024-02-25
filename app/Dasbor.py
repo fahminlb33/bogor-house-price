@@ -86,7 +86,11 @@ def main():
                                         "lon": 106.8
                                     },
                                     opacity=0.5,
-                                    hover_data=["district", "count", "price"])
+                                    hover_data={
+                                        "district": True,
+                                        "count": True,
+                                        "price": ":,.0f"
+                                    })
     ch_choro.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     ch_choro.update_layout(coloraxis_showscale=False)
     st.plotly_chart(ch_choro)
