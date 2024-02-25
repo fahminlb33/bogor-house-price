@@ -5,6 +5,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 class CustomFilters(object):
+
     @staticmethod
     def norm_description(s: str) -> str:
         # remove emojis
@@ -42,6 +43,7 @@ class CustomFilters(object):
             return x
         return y
 
+
 class EmbeddingDocumentTemplateEngine(object):
 
     def __init__(self, template_name: str) -> None:
@@ -66,5 +68,3 @@ class EmbeddingDocumentTemplateEngine(object):
 
     def __call__(self, tp: dict) -> str:
         return self.template.render(**tp)
-
-

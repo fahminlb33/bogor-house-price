@@ -16,8 +16,8 @@ from ml_llm import EmbeddingDocumentTemplateEngine
 
 class CreateEmbeddingsPipeline(TrainerMixin):
 
-    def __init__(self, dataset: str, qdrant_index_name: str,
-                 qdrant_host: str, qdrant_port: int, qdrant_port_grpc: int,
+    def __init__(self, dataset: str, qdrant_index_name: str, qdrant_host: str,
+                 qdrant_port: int, qdrant_port_grpc: int,
                  splitter_chunk_size: int, splitter_chunk_overlap: int,
                  openai_model: str, template_name: str) -> None:
         super().__init__()
@@ -61,7 +61,8 @@ class CreateEmbeddingsPipeline(TrainerMixin):
                 documents.append(
                     Document(id=row.id, content=contents, meta=metadata))
             except Exception as e:
-                self.logger.error(f"Error rendering document {row.id}. Error: {e}")
+                self.logger.error(
+                    f"Error rendering document {row.id}. Error: {e}")
 
         # set documents
         self.documents = documents
@@ -69,15 +70,16 @@ class CreateEmbeddingsPipeline(TrainerMixin):
     def train(self):
         # create document store
         hnsw = dict(m=16, ef_construct=100)
-        document_store = QdrantDocumentStore(host=self.qdrant_host,
-                                             port=self.qdrant_port,
-                                             grpc_port=self.qdrant_port_grpc,
-                                             prefer_grpc=True,
-                                             index=self.qdrant_collection_name,
-                                             embedding_dim=1536, # 1536 for text-embedding-3-small
-                                             hnsw_config=hnsw,
-                                             return_embedding=True,
-                                             wait_result_from_api=True)
+        document_store = QdrantDocumentStore(
+            host=self.qdrant_host,
+            port=self.qdrant_port,
+            grpc_port=self.qdrant_port_grpc,
+            prefer_grpc=True,
+            index=self.qdrant_collection_name,
+            embedding_dim=1536,  # 1536 for text-embedding-3-small
+            hnsw_config=hnsw,
+            return_embedding=True,
+            wait_result_from_api=True)
 
         # create embedding pipeline
         pipeline = Pipeline()
