@@ -24,3 +24,5 @@ etl:
 etl_test:
 	cd transform && dbt test
 
+etl_docs:
+	cd transform && dbt docs generate && cp -r target/* ../app_docs
