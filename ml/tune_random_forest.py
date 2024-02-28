@@ -1,5 +1,11 @@
+import argparse
 import optuna
 import mlflow
+
+# patch sklearn with Intel Extension for Scikit-learn
+from sklearnex import patch_sklearn
+
+patch_sklearn()
 
 import numpy as np
 import pandas as pd
@@ -14,8 +20,6 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error, r2_score
 
 from ml_plot import plot_distributions, plot_residuals, plot_predictions
-
-DATASET_PATH = "./dataset/etl/L2.regression_inliers.parquet"
 
 mlflow.set_tracking_uri("http://10.20.20.102:8009")
 
@@ -34,51 +38,55 @@ class Objective():
 
     def load_data(self):
         # load dataset
-        self.df = pd.read_parquet(self.dataset_path)
+        df = pd.read_parquet(self.dataset_path)
 
         # create X and y
-        self.X = self.df.drop(columns=["price"])
-        self.y = self.df["price"]
+        self.X = df.drop(columns=["price"])
+        self.y = df["price"]
 
-        # select columns
-        floor_mat_cols = [
-            col for col in self.df.columns if col.startswith("floor_mat_")
-        ]
-        house_mat_cols = [
-            col for col in self.df.columns if col.startswith("house_mat_")
-        ]
-        tags_cols = [col for col in self.df.columns if col.startswith("tags_")
-                    ] + [
-                        "hook_available", "ruang_tamu_available",
-                        "ruang_makan_available", "terjangkau_internet_available"
-                    ]
+        # identify columns
+        self.multihot_cols = []
+        self.multihot_cols.extend(
+            [col for col in df.columns if col.startswith("floor_mat_")])
+        self.multihot_cols.extend(
+            [col for col in df.columns if col.startswith("house_mat_")])
+        self.multihot_cols.extend(
+            [col for col in df.columns if col.startswith("facility_")])
+        self.multihot_cols.extend(
+            [col for col in df.columns if col.startswith("tag_")])
 
-        cat_cols = [
-            "kondisi_perabotan_norm", "kondisi_properti_norm",
-            "konsep_dan_gaya_rumah", "sumber_air", "pemandangan", "sertifikat"
-        ]
-        num_cols = [
-            "lebar_jalan_num", "daya_listrik_num", "luas_bangunan_num",
-            "luas_tanah_num", "carport", "garasi", "dapur", "jumlah_lantai",
-            "kamar_mandi_pembantu", "kamar_pembantu", "kamar_mandi",
-            "kamar_tidur"
+        # extra features not included in tags_
+        extra_tags = [
+            "ruang_tamu", "ruang_makan", "terjangkau_internet", "hook"
         ]
 
-        # create encoders
-        categorical_encoder = Pipeline(steps=[
+        for tag in extra_tags:
+            if tag in df.columns:
+                self.multihot_cols.append(tag)
+
+        # categorical columns
+        self.cat_cols = [
+            col for col in df.select_dtypes(include=["object"]).columns
+        ]
+
+        # numerical columns
+        self.num_cols = list(
+            set(df.columns) -
+            set(self.multihot_cols + self.cat_cols + ["price"]))
+
+        # create preprocessing pipeline
+        catl_encoder = Pipeline(steps=[
             ("encoder", OneHotEncoder(handle_unknown="ignore")),
         ])
 
-        numerical_encoder = Pipeline(steps=[
+        num_encoder = Pipeline(steps=[
             ("scaler", MinMaxScaler()),
         ])
 
-        # create transformer
         self.compose_transformers = ColumnTransformer(transformers=[
-            ("passthrough", "passthrough",
-             tags_cols + floor_mat_cols + house_mat_cols),
-            ("catergorical_encoder", categorical_encoder, cat_cols),
-            ("numerical_encoder", numerical_encoder, num_cols),
+            ("passthrough", "passthrough", self.multihot_cols),
+            ("catergorical_encoder", catl_encoder, self.cat_cols),
+            ("numerical_encoder", num_encoder, self.num_cols),
         ])
 
     def __call__(self, trial: optuna.Trial):
@@ -165,18 +173,28 @@ class Objective():
 
 
 if __name__ == "__main__":
+    # setup command-line arguments
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--dataset",
+        help="Input dataset from L3",
+        default="./dataset/curated/marts_ml_train_sel_manual.parquet")
+
+    args = parser.parse_args()
+
     # change matplotlib backend
     matplotlib.use("Agg")
 
     # create objective
-    objective = Objective(DATASET_PATH)
+    objective = Objective(args.dataset)
 
     # load dataset
     objective.load_data()
 
     # create mlflow experiment
     experiment_id = get_or_create_experiment(
-        "Project House Price: Random Forest")
+        "Bogor House Price: Random Forest")
     mlflow.set_experiment(experiment_id=experiment_id)
 
     # create study

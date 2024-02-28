@@ -30,15 +30,15 @@ class Objective():
 
     def load_data(self):
         # load dataset
-        self.df = pd.read_parquet(self.dataset_path)
+        df = pd.read_parquet(self.dataset_path)
 
         # create X and y
-        self.X = self.df.drop(columns=["price"])
-        self.y = self.df["price"]
+        self.X = df.drop(columns=["price"])
+        self.y = df["price"]
 
         # identify columns
         self.cat_cols = [
-            col for col in self.df.select_dtypes(include=["object"]).columns
+            col for col in df.select_dtypes(include=["object"]).columns
         ]
 
     def __call__(self, trial: optuna.Trial):
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset",
         help="Input dataset from L3",
-        default="./dataset/curated/marts_ml_train_sel_all.parquet")
+        default="./dataset/curated/marts_ml_train_sel_manual.parquet")
 
     args = parser.parse_args()
 
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     objective.load_data()
 
     # create mlflow experiment
-    experiment_id = get_or_create_experiment("Project House Price: CatBoost")
+    experiment_id = get_or_create_experiment("Bogor House Price: CatBoost")
     mlflow.set_experiment(experiment_id=experiment_id)
 
     # create study

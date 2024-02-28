@@ -1,5 +1,6 @@
 import abc
 import sys
+import timeit
 import logging
 
 
@@ -43,8 +44,14 @@ class TrainerMixin(metaclass=abc.ABCMeta):
         pass
 
     def run(self):
-        logging.info("Loading data...")
+        self.logger.info("Loading data...")
+        start_time = timeit.default_timer()
         self.load_data()
+        elapsed = timeit.default_timer() - start_time
+        self.logger.info(f"Data loaded in {elapsed:.2f} seconds")
 
-        logging.info("Training model...")
+        self.logger.info("Training model...")
+        start_time = timeit.default_timer()
         self.train()
+        elapsed = timeit.default_timer() - start_time
+        self.logger.info(f"Training finished in {elapsed:.2f} seconds")
