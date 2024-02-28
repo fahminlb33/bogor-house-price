@@ -96,7 +96,7 @@ def main():
         render_chat(message)
 
     # react to user input
-    if prompt := st.chat_input("What is up?"):
+    if prompt := st.chat_input("Mau cari apa?"):
         # display user message in chat message container
         st.chat_message("user").markdown(prompt)
 
@@ -116,7 +116,7 @@ def main():
             return
 
         # query to LLM
-        with st.spinner("Thinking..."):
+        with st.spinner("Sedang berpikir..."):
             # get pipeline and document store
             doc_store = get_document_store()
             pipeline = get_rag_pipeline(doc_store)
@@ -130,11 +130,11 @@ def main():
             house_records = []
             inserted_ids = []
             for doc in result["return_docs"]["documents"]:
-                if doc.id in inserted_ids:
+                if doc["id"] in inserted_ids:
                     continue
 
-                inserted_ids.append(doc.id)
-                doc.append(
+                inserted_ids.append(doc["id"])
+                house_records.append(
                     HouseRecord(city=doc["city"],
                                 district=doc["district"],
                                 price=doc["price"],
