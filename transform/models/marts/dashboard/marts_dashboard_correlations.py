@@ -13,6 +13,8 @@ def should_use_point_biser_corr(column):
 
 
 def model(dbt, session):
+    dbt.config(materialized="external", format="csv")
+
     # load clean dataset
     df = dbt.ref("int_ml_feature_outlier_removal")
 

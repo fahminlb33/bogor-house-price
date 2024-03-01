@@ -63,6 +63,8 @@ SPATIAL_PLACE_NORM_RULES = {
 
 
 def model(dbt, session):
+    dbt.config(materialized="external", format="csv")
+
     # load shapefile dataset
     shapefiles = [
         gpd.read_file(path) for path in dbt.config.get("shapefile_paths")
