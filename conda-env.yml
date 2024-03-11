@@ -9,6 +9,7 @@ dependencies:
   - aiosignal=1.3.1=pyhd8ed1ab_0
   - alembic=1.13.1=pyhd8ed1ab_1
   - alsa-lib=1.2.10=hd590300_0
+  - altair=5.2.0=pyhd8ed1ab_0
   - anyio=4.2.0=pyhd8ed1ab_0
   - appdirs=1.4.4=pyh9f0ad1d_0
   - argon2-cffi=23.1.0=pyhd8ed1ab_0
@@ -81,7 +82,6 @@ dependencies:
   - defusedxml=0.7.1=pyhd8ed1ab_0
   - docker-py=7.0.0=pyhd8ed1ab_0
   - docopt=0.6.2=py_1
-  - duckdb=0.7.1=py311hcafe171_1
   - entrypoints=0.4=pyhd8ed1ab_0
   - exceptiongroup=1.2.0=pyhd8ed1ab_2
   - executing=2.0.1=pyhd8ed1ab_0
@@ -89,7 +89,6 @@ dependencies:
   - filelock=3.13.1=pyhd8ed1ab_0
   - fiona=1.9.5=py311hf8e0aa6_2
   - flask=3.0.2=pyhd8ed1ab_0
-  - flask-sqlalchemy=3.0.3=pyhd8ed1ab_0
   - flatbuffers=23.5.26=h59595ed_1
   - folium=0.15.1=pyhd8ed1ab_0
   - font-ttf-dejavu-sans-mono=2.37=hab24e00_0
@@ -126,7 +125,6 @@ dependencies:
   - graphite2=1.3.13=h58526e2_1001
   - graphviz=9.0.0=h78e8752_1
   - greenlet=3.0.3=py311hb755f60_0
-  - grpcio=1.54.3=py311hcafe171_0
   - gst-plugins-base=1.22.9=h8e1006c_0
   - gstreamer=1.22.9=h98fc4e7_0
   - gtk2=2.24.33=h7f000aa_3
@@ -145,12 +143,12 @@ dependencies:
   - hyperlink=21.0.0=pyhd3deb0d_0
   - icu=73.2=h59595ed_0
   - idna=3.6=pyhd8ed1ab_0
-  - importlib-metadata=7.0.1=pyha770c72_0
   - importlib_metadata=7.0.1=hd8ed1ab_0
   - importlib_resources=6.1.1=pyhd8ed1ab_0
   - incremental=22.10.0=pyhd8ed1ab_0
   - ipykernel=6.29.2=pyhd33586a_0
   - ipython=8.21.0=pyh707e725_0
+  - ipywidgets=8.1.2=pyhd8ed1ab_0
   - isoduration=20.11.0=pyhd8ed1ab_0
   - itemadapter=0.8.0=pyhd8ed1ab_0
   - itemloaders=1.1.0=pyhd8ed1ab_0
@@ -174,6 +172,7 @@ dependencies:
   - jupyterlab=4.1.0=pyhd8ed1ab_0
   - jupyterlab_pygments=0.3.0=pyhd8ed1ab_1
   - jupyterlab_server=2.25.2=pyhd8ed1ab_0
+  - jupyterlab_widgets=3.0.10=pyhd8ed1ab_0
   - kealib=1.5.3=h2f55d51_0
   - keras=2.14.0=pyhd8ed1ab_0
   - keyutils=1.6.1=h166bdaf_0
@@ -222,6 +221,7 @@ dependencies:
   - libjpeg-turbo=3.0.0=hd590300_1
   - libkml=1.3.0=h01aab08_1018
   - liblapack=3.9.0=21_linux64_openblas
+  - libllvm14=14.0.6=hcd5def8_4
   - libllvm15=15.0.7=hb3ce162_4
   - libnetcdf=4.9.2=nompi_h9612171_113
   - libnghttp2=1.58.0=h47da74e_1
@@ -257,16 +257,19 @@ dependencies:
   - libxslt=1.1.39=h76b75d6_0
   - libzip=1.10.1=h2629f0a_3
   - libzlib=1.2.13=hd590300_5
+  - llvmlite=0.42.0=py311ha6695c7_1
   - lxml=5.1.0=py311h9691dec_0
   - lz4-c=1.9.4=hcb278e6_0
   - lzo=2.10=h516909a_1000
   - mako=1.3.2=pyhd8ed1ab_0
   - mapclassify=2.6.1=pyhd8ed1ab_0
   - markdown=3.5.2=pyhd8ed1ab_0
+  - markdown-it-py=3.0.0=pyhd8ed1ab_0
   - markupsafe=2.1.5=py311h459d7ec_0
   - matplotlib=3.8.2=py311h38be061_0
   - matplotlib-base=3.8.2=py311h54ef318_0
   - matplotlib-inline=0.1.6=pyhd8ed1ab_0
+  - mdurl=0.1.2=pyhd8ed1ab_0
   - minizip=4.0.4=h0ab5242_0
   - mistune=3.0.2=pyhd8ed1ab_0
   - ml_dtypes=0.2.0=py311h320fe9a_2
@@ -289,6 +292,7 @@ dependencies:
   - notebook-shim=0.2.3=pyhd8ed1ab_0
   - nspr=4.35=h27087fc_0
   - nss=3.97=h1d7d5a4_0
+  - numba=0.59.0=py311h96b013e_1
   - numpy=1.26.4=py311h64a7726_0
   - oauthlib=3.2.2=pyhd8ed1ab_0
   - openjpeg=2.5.0=h488ebb8_3
@@ -334,12 +338,14 @@ dependencies:
   - pyasn1=0.5.1=pyhd8ed1ab_0
   - pyasn1-modules=0.3.0=pyhd8ed1ab_0
   - pycparser=2.21=pyhd8ed1ab_0
+  - pydeck=0.8.0=pyhd8ed1ab_0
   - pydispatcher=2.0.5=py_1
   - pydot=2.0.0=py311h38be061_0
   - pygments=2.17.2=pyhd8ed1ab_0
   - pyjwt=2.8.0=pyhd8ed1ab_1
   - pymysql=1.1.0=pyhd8ed1ab_0
   - pynacl=1.5.0=py311h459d7ec_3
+  - pynndescent=0.5.11=pyhca7485f_0
   - pyopenssl=24.0.0=pyhd8ed1ab_0
   - pyparsing=3.1.1=pyhd8ed1ab_0
   - pyproj=3.6.1=py311hca0b8b9_5
@@ -371,6 +377,7 @@ dependencies:
   - requests-oauthlib=1.3.1=pyhd8ed1ab_0
   - rfc3339-validator=0.1.4=pyhd8ed1ab_0
   - rfc3986-validator=0.1.1=pyh9f0ad1d_0
+  - rich=13.7.0=pyhd8ed1ab_0
   - rpds-py=0.17.1=py311h46250e7_0
   - rsa=4.9=pyhd8ed1ab_0
   - rtree=1.2.0=py311h3bb2b0f_0
@@ -397,6 +404,7 @@ dependencies:
   - sqlparse=0.4.4=pyhd8ed1ab_0
   - stack_data=0.6.2=pyhd8ed1ab_0
   - statsmodels=0.14.1=py311h1f0f07a_0
+  - streamlit=1.31.1=pyhd8ed1ab_0
   - tabulate=0.9.0=pyhd8ed1ab_1
   - tbb=2021.11.0=h00ab1b0_1
   - tenacity=8.2.3=pyhd8ed1ab_0
@@ -415,6 +423,7 @@ dependencies:
   - tldextract=5.1.1=pyhd8ed1ab_0
   - toml=0.10.2=pyhd8ed1ab_0
   - tomli=2.0.1=pyhd8ed1ab_0
+  - toolz=0.12.1=pyhd8ed1ab_0
   - tornado=6.3.3=py311h459d7ec_1
   - tqdm=4.66.1=pyhd8ed1ab_0
   - traitlets=5.14.1=pyhd8ed1ab_0
@@ -425,17 +434,21 @@ dependencies:
   - typing_utils=0.1.0=pyhd8ed1ab_0
   - tzcode=2024a=h3f72095_0
   - tzdata=2024a=h0c530f3_0
+  - tzlocal=5.2=py311h38be061_0
   - ucx=1.14.1=h64cca9d_5
+  - umap-learn=0.5.5=py311h38be061_1
   - uri-template=1.3.0=pyhd8ed1ab_0
   - uriparser=0.9.7=hcb278e6_1
-  - urllib3=2.2.0=pyhd8ed1ab_0
+  - validators=0.22.0=pyhd8ed1ab_0
   - w3lib=2.1.2=pyhd8ed1ab_0
+  - watchdog=4.0.0=py311h38be061_0
   - wcwidth=0.2.13=pyhd8ed1ab_0
   - webcolors=1.13=pyhd8ed1ab_0
   - webencodings=0.5.1=pyhd8ed1ab_2
   - websocket-client=1.7.0=pyhd8ed1ab_0
   - werkzeug=3.0.1=pyhd8ed1ab_0
   - wheel=0.42.0=pyhd8ed1ab_0
+  - widgetsnbextension=4.0.10=pyhd8ed1ab_0
   - wrapt=1.14.1=py311hd4cff14_1
   - xcb-util=0.4.0=hd590300_1
   - xcb-util-image=0.4.0=h8ee46fc_1
@@ -467,4 +480,65 @@ dependencies:
   - zlib=1.2.13=hd590300_5
   - zope.interface=6.1=py311h459d7ec_0
   - zstd=1.5.5=hfc55251_0
+  - pip:
+      - agate==1.7.1
+      - annotated-types==0.6.0
+      - backoff==2.2.1
+      - boilerpy3==1.0.7
+      - cli-helpers==2.3.1
+      - configobj==5.0.8
+      - dash-core-components==2.0.0
+      - dash-html-components==2.0.0
+      - dash-table==5.0.0
+      - dataclasses-json==0.6.4
+      - dbt-core==1.7.8
+      - dbt-duckdb==1.7.1
+      - dbt-extractor==0.5.1
+      - dbt-semantic-interfaces==0.4.3
+      - distro==1.9.0
+      - duckcli==0.2.1
+      - duckdb==0.10.0
+      - extra-streamlit-components==0.1.70
+      - grpcio==1.60.1
+      - grpcio-tools==1.60.1
+      - haystack-ai==2.0.0b7
+      - haystack-bm25==1.0.2
+      - importlib-metadata==6.11.0
+      - isodate==0.6.1
+      - jsonpatch==1.33
+      - langchain-community==0.0.21
+      - langchain-core==0.1.24
+      - langchain-openai==0.0.6
+      - langsmith==0.1.4
+      - lazy-imports==0.3.1
+      - leather==0.3.4
+      - logbook==1.5.3
+      - marshmallow==3.20.2
+      - mashumaro==3.12
+      - minimal-snowplow-tracker==0.0.2
+      - monotonic==1.6
+      - more-itertools==10.2.0
+      - msgpack==1.0.7
+      - mypy-extensions==1.0.0
+      - openai==1.12.0
+      - parsedatetime==2.6
+      - pathspec==0.11.2
+      - portalocker==2.8.2
+      - posthog==3.4.2
+      - py-cpuinfo==9.0.0
+      - pydantic==2.6.1
+      - pydantic-core==2.16.2
+      - pydantic-settings==2.2.1
+      - pynvml==11.5.0
+      - python-dotenv==1.0.1
+      - python-slugify==8.0.4
+      - pytimeparse==1.1.8
+      - qdrant-client==1.7.3
+      - qdrant-haystack==3.0.0
+      - rapidfuzz==3.6.1
+      - regex==2023.12.25
+      - text-unidecode==1.3
+      - tiktoken==0.6.0
+      - typing-inspect==0.9.0
+      - urllib3==1.26.18
 prefix: /home/fahmi/.mambaforge/envs/rumah
