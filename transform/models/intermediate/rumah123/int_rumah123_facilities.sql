@@ -4,7 +4,8 @@ WITH base AS (
 		{{ dbt_utils.pivot(
 			'facility',
 			dbt_utils.get_column_values(ref('stg_rumah123_facilities'), 'facility'),
-			prefix='facility_'
+			prefix='facility_',
+			agg='max'
 		) }}
 	FROM
 		{{ ref('stg_rumah123_facilities') }}

@@ -4,7 +4,7 @@
 {%- set EXCLUDE_COLUMNS = ['id', 'installment', 'district', 'city', 'description', 'url', 'last_modified', 'scraped_at'] -%}
 
 {%- set query_significant_features -%}
-	SELECT variable FROM {{ ref('marts_dashboard_correlations') }} WHERE p_value < {{ P_VALUE_REJECT }}
+	SELECT variable FROM {{ ref('int_ml_feature_correlations') }} WHERE p_value < {{ P_VALUE_REJECT }}
 {%- endset -%}
 
 {%- set results = run_query(query_significant_features) -%}

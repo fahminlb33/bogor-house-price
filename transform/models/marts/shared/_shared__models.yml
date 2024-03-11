@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: marts_shared_dim_districts
+    description: Rumah123 district dimension
+    config:
+      tags: ["marts", "dashboard", "dimension"]
+    columns:
+      - name: district_sk
+        description: District surrogate key to join with district dimension
+      - name: city
+        description: City name
+      - name: district
+        description: District name

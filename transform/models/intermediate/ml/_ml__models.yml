@@ -211,3 +211,17 @@ models:
     config:
       tags: ["intermediate", "ml", "clean", "inliers"]
     <<: *x-columns
+
+  - name: int_ml_feature_correlations
+    description: Pearson/point biser correlations between house price and house variables (only numeric features)
+    config:
+      tags: ["marts", "dashboard", "correlations"]
+    columns:
+      - name: variable
+        description: Variable name
+      - name: method
+        description: Correlation method, either pearson or point biserial
+      - name: correlation
+        description: Correlation coefficient
+      - name: p_value
+        description: P-value of the correlation using T-test

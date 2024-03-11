@@ -3,7 +3,8 @@ SELECT
 	{{ dbt_utils.pivot(
 		'tag',
 		dbt_utils.get_column_values(ref('stg_rumah123_tags'), 'tag'),
-		prefix='tag_'
+		prefix='tag_',
+		agg='max'
 	) }}
 FROM
 	{{ ref('stg_rumah123_tags') }}

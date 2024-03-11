@@ -4,7 +4,7 @@
 {%- set EXCLUDE_COLUMNS = ['id', 'installment', 'district', 'city', 'description', 'url', 'last_modified', 'scraped_at'] -%}
 
 {%- set query_significant_features -%}
-	SELECT variable FROM {{ ref('marts_dashboard_correlations') }} WHERE abs(correlation) >= {{ R_CORR_MINIMUM }}
+	SELECT variable FROM {{ ref('int_ml_feature_correlations') }} WHERE abs(correlation) >= {{ R_CORR_MINIMUM }}
 {%- endset -%}
 
 {%- set results = run_query(query_significant_features) -%}
