@@ -1,18 +1,18 @@
 services:
   mariadb:
     image: mariadb:11.3.2
+    restart: always
     ports:
       - 3306:3306
     volumes:
       - mariadb:/var/lib/mysql
-    environment:
-      MARIADB_DATABASE: rumah_bogor
-      MARIADB_USER: kucingmenangis
-      MARIADB_PASSWORD: i32F8H4kqY
-      MARIADB_ROOT_PASSWORD: Gyc5Qpfz2tq3
+      - ./docker:/docker-entrypoint-initdb.d
+    env_file:
+      - docker/mariadb.env
 
   qdrant:
     image: qdrant/qdrant:v1.7.3
+    restart: always
     ports:
       - 6333:6333
       - 6334:6334
@@ -22,25 +22,31 @@ services:
 
   web:
     build: app
+    restart: always
     ports:
-      - 80:8000
-    environment:
-      DEBUG: false
+      - 8001:8000
+    depends_on:
+      - mariadb
+      - qdrant
+    env_file:
+      - docker/web.env
 
-      DB_HOST: mariadb
-      DB_PORT: 3306
-      DB_USER: kucingmenangis
-      DB_PASSWORD: i32F8H4kqY
-      DB_NAME: rumah_bogor
+  docs:
+    build: app_docs
+    restart: always
+    ports:
+      - 8002:8000
 
-      QDRANT_HOST: qdrant
-      QDRANT_PORT: 6333
-      QDRANT_GRP_PORT: 6334
-      QDRANT_INDEX_NAME: rumah_bogor
-      QDRANT_INDEX_DIM: 1536
-      QDRANT_HNSW_M: 16
-      QDRANT_HNSW_EF: 100
-
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    depends_on:
+      - web
+      - docs
 
 volumes:
   mariadb:
