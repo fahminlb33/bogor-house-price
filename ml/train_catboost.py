@@ -51,7 +51,9 @@ class TrainCatBoost(TrainerMixin):
         ]
 
         # create pool
-        self.train_pool = Pool(data=self.X, label=self.y, cat_features=self.cat_cols)
+        self.train_pool = Pool(data=self.X,
+                               label=self.y,
+                               cat_features=self.cat_cols)
 
     def train(self):
         # create log dir
@@ -65,7 +67,6 @@ class TrainCatBoost(TrainerMixin):
             "learning_rate": self.learning_rate,
             "min_data_in_leaf": self.min_data_in_leaf,
             "subsample": self.subsample,
-
             "verbose": self.verbose,
             "task_type": "GPU",
             # "task_type": "CPU",
@@ -130,10 +131,18 @@ if __name__ == "__main__":
                         default=f"./ml_models/catboost-{today}")
     parser.add_argument("--bootstrap", help="Bootstrap", default="Bernoulli")
     parser.add_argument("--depth", help="Depth", default=12)
-    parser.add_argument("--grow_policy", help="Grow policy", default="Depthwise")
-    parser.add_argument("--learning_rate", help="Learning rate", default=0.05683273851486543)
-    parser.add_argument("--min_data_in_leaf", help="Min data in leaf", default=89)
-    parser.add_argument("--subsample", help="Subsample", default=0.851934076287287)
+    parser.add_argument("--grow_policy",
+                        help="Grow policy",
+                        default="Depthwise")
+    parser.add_argument("--learning_rate",
+                        help="Learning rate",
+                        default=0.05683273851486543)
+    parser.add_argument("--min_data_in_leaf",
+                        help="Min data in leaf",
+                        default=89)
+    parser.add_argument("--subsample",
+                        help="Subsample",
+                        default=0.851934076287287)
     parser.add_argument("--random_state", help="Random state", default=21)
     parser.add_argument("--verbose", help="Verbose", default=0)
 

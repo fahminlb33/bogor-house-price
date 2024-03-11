@@ -6,13 +6,13 @@ import warnings
 warnings.filterwarnings("ignore")
 os.environ['PYTHONWARNINGS'] = 'ignore'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # patch sklearn with Intel Extension for Scikit-learn
 from sklearnex import patch_sklearn
 
 patch_sklearn()
 
-import joblib
 import numpy as np
 import pandas as pd
 
@@ -162,7 +162,10 @@ class TrainRandomForest(TrainerMixin):
                 "mae": -scores["test_neg_mean_absolute_error"][i],
                 "mape": -scores["test_neg_mean_absolute_percentage_error"][i],
                 "category": category,
-                "name": name
+                "name": name,
+                "fold": i,
+                "run_name": self.run_name,
+                "features_count": X.shape[1],
             })
 
         return score_records
@@ -234,7 +237,7 @@ class TrainRandomForest(TrainerMixin):
             log_dir = self.get_tensorboard_logdir("catboost", fold_i)
             model = CatBoostRegressor(verbose=self.verbose,
                                       random_seed=self.random_state,
-                                      task_type="GPU",
+                                      task_type="CPU",
                                       train_dir=log_dir)
 
             # fit model
@@ -257,6 +260,9 @@ class TrainRandomForest(TrainerMixin):
                 "mape": mean_absolute_percentage_error(y_test, y_pred),
                 "category": "CatBoost",
                 "name": f"CatBoostRegressor",
+                "fold": fold_i,
+                "run_name": self.run_name,
+                "features_count": self.X.shape[1],
             })
 
             del model
@@ -352,6 +358,9 @@ class TrainRandomForest(TrainerMixin):
                 "mape": mean_absolute_percentage_error(y_test, y_pred),
                 "category": "TensorFlow",
                 "name": "DNNRegressor",
+                "fold": fold_i,
+                "run_name": self.run_name,
+                "features_count": self.X.shape[1],
             })
 
             del model

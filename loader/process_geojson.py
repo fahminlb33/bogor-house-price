@@ -15,10 +15,13 @@ SHAPEFILE_PATHS = [
     "./dataset/shp/kab/ADMINISTRASIDESA_AR_25K.shp"
 ]
 
+
 def MultipleArgsParser(s):
     return [str(item) for item in s.split(',')]
 
+
 class ShapefileToGeojsonPipeline:
+
     def __init__(self, shapefile_paths: list[str], output_file: str) -> None:
         super().__init__()
 
@@ -31,7 +34,8 @@ class ShapefileToGeojsonPipeline:
 
         # merge shapefiles
         df_bogor = pd.concat(shapefiles, ignore_index=True)
-        df_bogor = gpd.GeoDataFrame(df_bogor.drop(columns=SPATIAL_SHP_DROP_COLUMNS))
+        df_bogor = gpd.GeoDataFrame(
+            df_bogor.drop(columns=SPATIAL_SHP_DROP_COLUMNS))
 
         # save to file
         df_bogor.to_file(self.output_file, driver='GeoJSON')
@@ -54,4 +58,3 @@ if __name__ == '__main__':
     # run pipeline
     pipeline = ShapefileToGeojsonPipeline(args.shapefiles, args.output_file)
     pipeline.run()
-
