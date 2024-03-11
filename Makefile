@@ -1,28 +1,28 @@
-SHELL := /bin/bash
-
 install:
 	pip install -r requirements.txt
 
 format:
-	yapf -i -r --style google --exclude 'transform/target/**/*.py' .
+	yapf -i -r --style google --exclude 'transform/target/**/*.py' --exclude 'app_docs/**/*.py' .
 
 scrape:
-	pushd scraper && scrapy crawl rumah123 -s JOBDIR=crawls/rumah123 && popd
-
-train_catboost:
-	python predictions/train_catboost.py
-
-train_tensorflow:
-	python predictions/train_tensorflow.py
+	cd scraper && \
+	scrapy crawl rumah123 -s JOBDIR=crawls/rumah123
 
 dev:
-	cd app && FLASK_APP=app.py FLASK_ENV=development FLASK_DEBUG=1 flask run --reload
+	cd app && \
+	FLASK_APP=app.py FLASK_ENV=development FLASK_DEBUG=1 flask run --reload
 
 etl:
-	cd transform && dbt run && dbt docs generate
+	cd transform && \
+	dbt run && \
+	dbt docs generate
 
 etl_test:
-	cd transform && dbt test
+	cd transform && \
+	dbt test
 
 etl_docs:
-	cd transform && dbt docs generate && cp -r target/* ../app_docs
+	cd transform && \
+	dbt docs generate && \
+	mkdir -p ../app_docs/app && \
+	cp -r target/* ../app_docs/app
