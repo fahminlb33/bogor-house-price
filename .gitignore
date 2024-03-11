@@ -161,7 +161,7 @@ cython_debug/
 
 # optuna
 catboost_info/
-bogor_houses.db
+*.db
 
 # scrapy stuff
 crawls/
