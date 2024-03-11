@@ -20,8 +20,8 @@ def percent_change(x, y):
 
 @st.cache_data()
 def dim_districts():
-    return pd.read_csv("assets/data/marts_dashboard_dim_districts.csv"
-                      ).set_index("district_sk")
+    return pd.read_csv("assets/data/marts_shared_dim_districts.csv").set_index(
+        "district_sk")
 
 
 @st.cache_data()
@@ -47,7 +47,7 @@ def fact_price():
 
 @st.cache_data()
 def fact_correlations():
-    return pd.read_csv("assets/data/marts_dashboard_correlations_export.csv")
+    return pd.read_csv("assets/data/marts_ml_correlations.csv")
 
 
 @st.cache_data()

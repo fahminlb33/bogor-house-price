@@ -109,10 +109,15 @@ def main():
     # split rows into two columns
     col1, col2 = st.columns(2)
     with col1:
-        st.table(df_stats.loc[["min", "mean", "median", "mode", "std", "std_err", "max", "25%", "50%", "75%"]])
+        st.table(df_stats.loc[[
+            "min", "mean", "median", "mode", "std", "std_err", "max", "25%",
+            "50%", "75%"
+        ]])
     with col2:
-        st.table(df_stats.loc[["iqr", "coef_var", "skew", "kurtosis", "upper_ci", "lower_ci", "jarque_bera", "jarque_bera_pval"]])
-
+        st.table(df_stats.loc[[
+            "iqr", "coef_var", "skew", "kurtosis", "upper_ci", "lower_ci",
+            "jarque_bera", "jarque_bera_pval"
+        ]])
 
 
 if __name__ == "__main__":
