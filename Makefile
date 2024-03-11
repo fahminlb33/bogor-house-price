@@ -12,6 +12,9 @@ dev:
 	cd app && \
 	FLASK_APP=app.py FLASK_ENV=development FLASK_DEBUG=1 flask run --reload
 
+deploy: etl_docs
+	docker compose up -d
+
 etl:
 	cd transform && \
 	dbt run && \
@@ -24,5 +27,4 @@ etl_test:
 etl_docs:
 	cd transform && \
 	dbt docs generate && \
-	mkdir -p ../app_docs/app && \
-	cp -r target/* ../app_docs/app
+	cp -rf target/* ../app_docs
