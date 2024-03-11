@@ -46,25 +46,29 @@ class Objective():
             # create hyperparameters
             # from: https://github.com/optuna/optuna-examples/blob/main/catboost/catboost_pruning.py
             params = {
-                "iterations":
-                    trial.suggest_int("iterations", 10, 1000),
-                "depth":
-                    trial.suggest_int("depth", 1, 12),
-                # "colsample_bylevel": trial.suggest_float("colsample_bylevel", 0.01, 1.0, log=True),
-                "subsample":
-                    trial.suggest_float("subsample", 0.1, 1, log=True),
                 "grow_policy":
                     trial.suggest_categorical(
                         "grow_policy",
                         ["SymmetricTree", "Depthwise", "Lossguide"]),
-                "learning_rate":
-                    trial.suggest_float("learning_rate", 1e-3, 0.1, log=True),
+                "iterations":
+                    trial.suggest_int("iterations", 10, 2000),
+                "depth":
+                    trial.suggest_int("depth", 1, 16),
                 "min_data_in_leaf":
                     trial.suggest_int("min_data_in_leaf", 1, 100),
+                "subsample":
+                    trial.suggest_float("subsample", 0.1, 1, log=True),
+                "learning_rate":
+                    trial.suggest_float("learning_rate", 1e-3, 0.1, log=True),
+                "colsample_bylevel":
+                    trial.suggest_float("colsample_bylevel",
+                                        0.01,
+                                        1.0,
+                                        log=True),
 
                 # fixed hyperparameters
                 "task_type":
-                    "GPU",
+                    "CPU",
                 "objective":
                     "RMSE",
                 "bootstrap_type":
@@ -173,6 +177,6 @@ if __name__ == "__main__":
     # create study
     study = optuna.create_study(direction="minimize",
                                 study_name="catboost",
-                                storage="sqlite:///bogor_houses.db",
+                                storage="sqlite:///bogor_houses_v2.db",
                                 load_if_exists=True)
     study.optimize(objective, n_trials=100)

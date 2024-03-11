@@ -193,13 +193,12 @@ if __name__ == "__main__":
     objective.load_data()
 
     # create mlflow experiment
-    experiment_id = get_or_create_experiment(
-        "Bogor House Price: Random Forest")
+    experiment_id = get_or_create_experiment("Bogor House Price: Random Forest")
     mlflow.set_experiment(experiment_id=experiment_id)
 
     # create study
     study = optuna.create_study(direction="minimize",
                                 study_name="random_forest",
-                                storage="sqlite:///bogor_houses.db",
+                                storage="sqlite:///bogor_houses_v2.db",
                                 load_if_exists=True)
     study.optimize(objective, n_trials=100)

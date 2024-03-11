@@ -68,8 +68,7 @@ class TrainCatBoost(TrainerMixin):
             "min_data_in_leaf": self.min_data_in_leaf,
             "subsample": self.subsample,
             "verbose": self.verbose,
-            "task_type": "GPU",
-            # "task_type": "CPU",
+            "task_type": "CPU",
             "train_dir": log_dir,
             "random_seed": self.random_state,
         }
