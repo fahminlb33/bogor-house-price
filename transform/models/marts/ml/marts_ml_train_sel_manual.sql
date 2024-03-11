@@ -29,7 +29,6 @@ WITH base AS (
 		tag_komplek,
 		tag_kpr,
 		tag_perumahan,
-		tahun_dibangun,
 	FROM
 		{{ ref('int_ml_feature_outlier_removal') }}
 )
