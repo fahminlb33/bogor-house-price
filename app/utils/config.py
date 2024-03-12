@@ -27,6 +27,10 @@ class AppSettings(BaseSettings):
     qdrant_hnsw_m: int = Field(default=16)
     qdrant_hnsw_ef: int = Field(default=100)
 
+    # llm
+    openai_chat_model: str = Field(default="gpt-3.5-turbo")
+    openai_embedding_model: str = Field(default="text-embedding-3-small")
+
 
 @st.cache_resource(show_spinner=False)
 def get_settings():

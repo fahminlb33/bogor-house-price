@@ -74,56 +74,75 @@ def track_prompt(_session_token: str, _prompt: str, _response: dict):
     # start transaction
     with Session(engine) as tx:
         # get user session
-        user_session = track_user_session(_session_token)
+        session_id = track_user_session(_session_token)
 
-        # save prompt and usage
-        openai_prompt = OpenAIPrompt(id=str(uuid.uuid4()),
-                                     prompt=_prompt,
-                                     session_id=user_session)
+        # phase 1: track prompt usage
+        prompt_id = str(uuid.uuid4())
+        tx.add(OpenAIPrompt(id=prompt_id, prompt=_prompt,
+                            session_id=session_id))
 
-        embedder_meta = _response["embedder"]["meta"]
-        embed_usage = OpenAIUsage(
-            id=str(uuid.uuid4()),
-            usage_type="embedding",
-            model=embedder_meta["model"],
-            prompt_tokens=embedder_meta["usage"]["prompt_tokens"],
-            completion_tokens=0,
-            total_tokens=embedder_meta["usage"]["total_tokens"],
-            prompt_id=openai_prompt.id)
+        # phase 2: track router usage
+        tx.add(create_openai_usage(_response["router"]["meta"][0], prompt_id))
 
-        tx.add_all([openai_prompt, embed_usage])
+        # phase 3: track prediction or RAG usage
+        if "prediction_llm" in _response:
+            # phase 3a: track prediction pipeline
+            tx.add_all([
+                # phase 3a.1: prediction feature extraction
+                create_openai_usage(_response["prediction_llm"]["meta"][0],
+                                    prompt_id),
 
-        # save returned documents from RAG
-        for doc in _response["return_docs"]["documents"]:
-            # save RAG usage
-            rag_usage = RetrievedDocument(id=str(uuid.uuid4()),
-                                          city=doc["city"],
-                                          district=doc["district"],
-                                          price=doc["price"],
-                                          document_id=doc["id"],
-                                          prompt_id=openai_prompt.id)
+                # phase 3a.2: paraphrase response
+                create_openai_response(
+                    _response["prediction_result_llm"]["replies"][0],
+                    prompt_id),
+                create_openai_usage(
+                    _response["prediction_result_llm"]["meta"][0], prompt_id),
+            ])
+        else:
+            # phase 3b: track RAG usage
+            tx.add_all([
+                # phase 3b.1: question embedding
+                create_openai_usage(_response["rag_embedder"]["meta"],
+                                    prompt_id),
 
-            tx.add(rag_usage)
+                # phase 3b.2: returned documents
+                *create_rag_documents(_response["return_docs"]["documents"],
+                                      prompt_id),
 
-        # save LLM responses
-        for reply, meta in zip(_response["llm"]["replies"],
-                               _response["llm"]["meta"]):
-            # save OpenAI usage
-            gen_response = OpenAIResponse(id=str(uuid.uuid4()),
-                                          contents=reply,
-                                          prompt_id=openai_prompt.id)
+                # phase 3b.3: QNA response
+                create_openai_response(_response["rag_llm"]["replies"][0],
+                                       prompt_id),
+                create_openai_usage(_response["rag_llm"]["meta"][0], prompt_id),
+            ])
 
-            # save OpenAI usage
-            gen_usage = OpenAIUsage(
-                id=str(uuid.uuid4()),
-                usage_type="generation",
-                model=meta["model"],
-                prompt_tokens=meta["usage"]["prompt_tokens"],
-                completion_tokens=meta["usage"]["completion_tokens"],
-                total_tokens=meta["usage"]["total_tokens"],
-                prompt_id=openai_prompt.id,
-                response_id=gen_response.id)
-
-            tx.add_all([gen_response, gen_usage])
-
+        # commit transaction
         tx.commit()
+
+
+def create_openai_response(contents: str, prompt_id: str):
+    return OpenAIResponse(id=str(uuid.uuid4()),
+                          contents=contents,
+                          prompt_id=prompt_id)
+
+
+def create_openai_usage(meta: dict, prompt_id: str):
+    usage = meta["usage"]
+    return OpenAIUsage(id=str(uuid.uuid4()),
+                       usage_type="generation",
+                       model=meta["model"],
+                       total_tokens=usage.get("total_tokens", 0),
+                       prompt_tokens=usage.get("prompt_tokens", 0),
+                       completion_tokens=usage.get("completion_tokens", 0),
+                       prompt_id=prompt_id.id)
+
+
+def create_rag_documents(documents: list[dict], prompt_id: str):
+    return [
+        RetrievedDocument(id=str(uuid.uuid4()),
+                          city=doc["city"],
+                          district=doc["district"],
+                          price=doc["price"],
+                          document_id=doc["id"],
+                          prompt_id=prompt_id) for doc in documents
+    ]

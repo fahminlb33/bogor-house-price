@@ -53,8 +53,6 @@ class OpenAIResponse(Base):
     prompt_id: Mapped[str] = mapped_column(ForeignKey("openai_prompts.id"))
 
     prompt: Mapped[OpenAIPrompt] = relationship(back_populates="responses")
-    usages: Mapped[list["OpenAIUsage"]] = relationship(
-        back_populates="response")
 
 
 class OpenAIUsage(Base):
@@ -66,11 +64,8 @@ class OpenAIUsage(Base):
     completion_tokens: Mapped[int] = mapped_column(Integer)
     total_tokens: Mapped[int] = mapped_column(Integer)
     prompt_id: Mapped[str] = mapped_column(ForeignKey("openai_prompts.id"))
-    response_id: Mapped[Optional[str]] = mapped_column(
-        ForeignKey("openai_responses.id"))
 
     prompt: Mapped[OpenAIPrompt] = relationship(back_populates="usages")
-    response: Mapped[OpenAIResponse] = relationship(back_populates="usages")
 
 
 class RetrievedDocument(Base):

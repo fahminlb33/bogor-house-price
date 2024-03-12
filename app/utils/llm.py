@@ -1,6 +1,7 @@
 import streamlit as st
 
-from haystack import Pipeline, Document, component
+from haystack import Pipeline
+from haystack.components.routers import ConditionalRouter
 from haystack.components.embedders import OpenAITextEmbedder
 from haystack.components.generators import OpenAIGenerator
 from haystack.components.builders.prompt_builder import PromptBuilder
@@ -8,32 +9,23 @@ from haystack_integrations.document_stores.qdrant import QdrantDocumentStore
 from haystack_integrations.components.retrievers.qdrant import QdrantEmbeddingRetriever
 
 from utils.config import get_settings
+from utils.llm_prompts import (PROMPT_FOR_ROUTER,
+                               PROMPT_FOR_PREDICTION_EXTRACTION,
+                               PROMPT_FOR_PREDICTION_RESULT, PROMPT_FOR_RAG)
+from utils.llm_components import (PredictHousePrice,
+                                  ReturnDocumentsFromRetriever)
 
-RAG_PROMPT_TEMPLATE = (
-    "You are an assistant for house recommendation/suggestion tasks. "
-    "You will be given a few documents about property listing along with it's price, address, and specifications. "
-    "Give a summary about the house specs and address if you have a match. "
-    "Do not return the result as lists, but as a paragraph. "
-    "You can suggest more than one house based on the context. "
-    "If you don't know the answer or there is no relevant answer, just say NO_RESULTS exactly. "
-    "Answer in Indonesian language regardless of the prompt language."
-    "Use five sentences maximum and keep the answer concise.\n\n"
-    "Context:\n"
-    "###\n"
-    "{% for doc in documents %}"
-    "{{ doc.content }}"
-    "{% endfor %}"
-    "###\n\n"
-    "Question: {{question}}\n"
-    "Answer:")
-
-
-@component
-class ReturnDocumentsFromRetriever:
-
-    @component.output_types(documents=list[dict])
-    def run(self, docs: list[Document]):
-        return {"documents": [{"id": doc.id, **doc.meta} for doc in docs]}
+AGENT_ROUTER = [{
+    "condition": "{{'PREDICTION' in replies[0]}}",
+    "output": "{{query}}",
+    "output_name": "features",
+    "output_type": str,
+}, {
+    "condition": "{{'PREDICTION' not in replies[0]}}",
+    "output": "{{query}}",
+    "output_name": "question",
+    "output_type": str,
+}]
 
 
 @st.cache_resource(show_spinner=False)
@@ -57,34 +49,94 @@ def get_document_store() -> QdrantDocumentStore:
 
 @st.cache_resource(show_spinner=False)
 def get_rag_pipeline(_document_store: QdrantDocumentStore) -> Pipeline:
+    # get settings
+    settings = get_settings()
+
+    # router
+    router = ConditionalRouter(AGENT_ROUTER)
+    router_prompt = PromptBuilder(PROMPT_FOR_ROUTER)
+    router_llm = OpenAIGenerator(model=settings.openai_chat_model)
+
+    # extraction of input features
+    prediction_prompt = PromptBuilder(PROMPT_FOR_PREDICTION_EXTRACTION)
+    prediction_llm = OpenAIGenerator(
+        model=settings.openai_chat_model,
+        generation_kwargs={"response_format": {
+            "type": "json_object"
+        }})
+    prediction_component = PredictHousePrice()
+
+    # prediction result
+    prediction_result_prompt = PromptBuilder(PROMPT_FOR_PREDICTION_RESULT)
+    prediction_result_llm = OpenAIGenerator(model=settings.openai_chat_model)
+
+    # RAG
+    rag_embedder = OpenAITextEmbedder(model=settings.openai_embedding_model)
+    rag_retriever = QdrantEmbeddingRetriever(document_store=_document_store)
+    rag_prompt = PromptBuilder(template=PROMPT_FOR_RAG)
+    rag_llm = OpenAIGenerator(model=settings.openai_chat_model)
+    rag_doc_returner = ReturnDocumentsFromRetriever()
+
     # create pipeline
-    rag_pipeline = Pipeline()
+    pipeline = Pipeline()
 
-    # add components
-    rag_pipeline.add_component(
-        "embedder", OpenAITextEmbedder(model="text-embedding-3-small"))
-    rag_pipeline.add_component(
-        "retriever", QdrantEmbeddingRetriever(document_store=_document_store))
-    rag_pipeline.add_component("rag_prompt",
-                               PromptBuilder(template=RAG_PROMPT_TEMPLATE))
-    rag_pipeline.add_component("llm", OpenAIGenerator(model="gpt-3.5-turbo"))
-    rag_pipeline.add_component("return_docs", ReturnDocumentsFromRetriever())
+    # router phase
+    pipeline.add_component("router_prompt", router_prompt)
+    pipeline.add_component("router_llm", router_llm)
+    pipeline.add_component("router", router)
 
-    # connect components
-    rag_pipeline.connect("embedder.embedding", "retriever.query_embedding")
-    rag_pipeline.connect("retriever", "rag_prompt.documents")
-    rag_pipeline.connect("retriever", "return_docs")
-    rag_pipeline.connect("rag_prompt", "llm")
+    # if the route is PREDICTION
+    pipeline.add_component("prediction_prompt", prediction_prompt)
+    pipeline.add_component("prediction_llm", prediction_llm)
+    pipeline.add_component("prediction_component", prediction_component)
+    pipeline.add_component("prediction_prompt_for_result",
+                           prediction_result_prompt)
+    pipeline.add_component("prediction_result_llm", prediction_result_llm)
 
-    return rag_pipeline
+    # if the route is DATABASE_SEARCH
+    pipeline.add_component("rag_embedder", rag_embedder)
+    pipeline.add_component("rag_retriever", rag_retriever)
+    pipeline.add_component("rag_prompt", rag_prompt)
+    pipeline.add_component("rag_llm", rag_llm)
+    pipeline.add_component("rag_doc_returner", rag_doc_returner)
+
+    # connect the components
+    pipeline.connect("router_prompt", "router_llm")
+    pipeline.connect("router_llm.replies", "router.replies")
+
+    pipeline.connect("router.features", "prediction_prompt")
+    pipeline.connect("prediction_prompt", "prediction_llm")
+    pipeline.connect("prediction_llm", "prediction_component")
+    pipeline.connect("prediction_component.prediction",
+                     "prediction_prompt_for_result.prediction")
+    pipeline.connect("prediction_component.features",
+                     "prediction_prompt_for_result.features")
+    pipeline.connect("prediction_prompt_for_result", "prediction_result_llm")
+
+    pipeline.connect("router.question", "rag_embedder.text")
+    pipeline.connect("router.question", "rag_prompt.question")
+    pipeline.connect("rag_embedder.embedding", "rag_retriever.query_embedding")
+    pipeline.connect("rag_retriever", "rag_prompt.documents")
+    pipeline.connect("rag_retriever", "rag_doc_returner")
+    pipeline.connect("rag_prompt", "rag_llm")
+
+    return pipeline
 
 
 def query(_pipeline: Pipeline, question: str) -> dict:
-    return _pipeline.run({
-        "embedder": {
-            "text": question
+    # get settings
+    settings = get_settings()
+
+    # run the pipeline
+    result = _pipeline.run(
+        {
+            "router_prompt": {
+                "query": question
+            },
+            "router": {
+                "query": question
+            },
         },
-        "rag_prompt": {
-            "question": question
-        },
-    })
+        debug=settings.debug)
+
+    return result
