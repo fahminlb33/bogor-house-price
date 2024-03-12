@@ -20,7 +20,7 @@ services:
       - qdrant-snapshots:/qdrant/snapshots
 
   web:
-    build: app
+    image: fahminlb33/bogor-house-price:latest
     restart: unless-stopped
     ports:
       - 80:8000
