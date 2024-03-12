@@ -10,15 +10,14 @@ scrape:
 
 dev:
 	cd app && \
-	FLASK_APP=app.py FLASK_ENV=development FLASK_DEBUG=1 flask run --reload
+	streamlit run Dasbor.py
 
 deploy: etl_docs
 	docker compose up -d
 
 etl:
 	cd transform && \
-	dbt run && \
-	dbt docs generate
+	dbt run
 
 etl_test:
 	cd transform && \
@@ -27,4 +26,5 @@ etl_test:
 etl_docs:
 	cd transform && \
 	dbt docs generate && \
+	mkdir -p ../app_docs && \
 	cp -rf target/* ../app_docs
