@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import requests
 import streamlit as st
 import extra_streamlit_components as stx
 
@@ -32,6 +33,18 @@ def load_css():
     with open("assets/style.css") as f:
         return f.read()
 
+@st.cache_resource()
+def proxy_image(url: str):
+    # set headers
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
+    }
+
+    # get image
+    response = requests.get(url, headers=headers)
+
+    # return image
+    return response.content
 
 def render_chat(message: ChatRecord):
     with st.chat_message(message.role):
@@ -58,7 +71,7 @@ def render_chat(message: ChatRecord):
                 price = f"Rp{result.price:,.0f}jt" if result.price < 1000 else f"Rp{(result.price / 1000):,.0f}m"
                 with cols[i % 5]:
                     if result.main_image_url:
-                        st.image(result.main_image_url)
+                        st.image(proxy_image(result.main_image_url))
                     st.markdown(
                         f'<div class="text-caption">{price}<br><a href="{result.url}">{result.district}, {result.city}</a></div>',
                         unsafe_allow_html=True)

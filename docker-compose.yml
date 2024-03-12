@@ -31,32 +31,12 @@ services:
     build: app
     restart: unless-stopped
     ports:
-      - 8003:8000
+      - 80:8000
     depends_on:
       - mariadb
       - qdrant
     env_file:
       - docker/web.env
-
-  image_proxy:
-    image: python:3.11.8-slim
-    restart: unless-stopped
-    ports:
-      - 8004:8080
-    volumes:
-      - ./docker/reverse_proxy.py:/usr/src/app/reverse_proxy.py
-    command: python /usr/src/app/reverse_proxy.py
-    environment:
-      - PYTHONUNBUFFERED=1
-
-  nginx:
-    image: nginx:alpine
-    restart: unless-stopped
-    ports:
-      - 80:80
-    volumes:
-      - ./docker/nginx.conf:/etc/nginx/nginx.conf
-      - ./docker/proxy.conf:/etc/nginx/proxy.conf
 
 volumes:
   mariadb:
