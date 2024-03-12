@@ -21,8 +21,6 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolu
 
 from ml_plot import plot_distributions, plot_residuals, plot_predictions
 
-mlflow.set_tracking_uri("http://10.20.20.102:8009")
-
 
 def get_or_create_experiment(experiment_name):
     if experiment := mlflow.get_experiment_by_name(experiment_name):
@@ -180,11 +178,16 @@ if __name__ == "__main__":
         "--dataset",
         help="Input dataset from L3",
         default="./dataset/curated/marts_ml_train_sel_manual.parquet")
+    parser.add_argument("--tracking-url", help="MLflow tracking server URL")
 
     args = parser.parse_args()
 
     # change matplotlib backend
     matplotlib.use("Agg")
+
+    # set mlflow tracking server
+    if args.tracking_url:
+        mlflow.set_tracking_uri(args.tracking_url)
 
     # create objective
     objective = Objective(args.dataset)
