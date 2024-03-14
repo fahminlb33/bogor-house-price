@@ -47,5 +47,14 @@ class PredictHousePrice:
                     "bathrooms": features.get("bathrooms", 0),
                 }
             }
-        except:
-            return -1
+        except Exception as e:
+            print("Error when predicting house price in LLM component", e)
+            return {
+                "prediction": 0,
+                "features": {
+                    "land_area": 0,
+                    "house_size": 0,
+                    "bedrooms": 0,
+                    "bathrooms": 0,
+                }
+            }

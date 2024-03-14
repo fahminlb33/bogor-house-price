@@ -2,7 +2,7 @@ import streamlit as st
 import extra_streamlit_components as stx
 
 from utils.db import track_prediction
-from utils.data_loaders import format_price
+from utils.data_loaders import format_price_long
 from utils.cookies import ensure_user_has_session, get_session_id
 from utils.regression import (AVAILABLE_FACILITIES, AVAILABLE_HOUSE_MATERIAL,
                               AVAILABLE_TAGS, construct_features, load_model)
@@ -56,8 +56,8 @@ def main():
                                                               step=1)
             input_features["daya_listrik"] = st.number_input('Daya listrik',
                                                              step=1)
-            input_features["tahun_dibangun"] = st.number_input('Tahun dibangun',
-                                                               step=1)
+            input_features["jumlah_lantai"] = st.number_input('Jumlah lantai',
+                                                              step=1)
 
         with col2:
             input_features["kamar_mandi"] = st.number_input('Kamar mandi',
@@ -70,8 +70,6 @@ def main():
                 'Kamar mandi pembantu', step=1)
 
         with col3:
-            input_features["jumlah_lantai"] = st.number_input('Jumlah lantai',
-                                                              step=1)
             input_features["dapur"] = st.number_input('Dapur', step=1)
             input_features["lebar_jalan"] = st.number_input(
                 'Lebar jalan (mobil)', step=1)
@@ -94,7 +92,7 @@ def main():
     #
 
     st.info(
-        "Ingat, model ini memiliki nilai *Mean Absolute Error* (MAE) sebesar ~Rp278jt",
+        "Ingat, model ini memiliki nilai *Mean Absolute Error* (MAE) sebesar ~Rp279jt",
         icon="💸")
 
     if submit_res:
@@ -106,7 +104,7 @@ def main():
 
         # predict
         y_pred = model.predict(X_pred)
-        price = format_price(y_pred[0] * 1_000_000)
+        price = format_price_long(y_pred[0] * 1_000_000)
 
         # show prediction
         st.markdown('<div class="text-center">Hasil Prediksi',

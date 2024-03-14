@@ -56,6 +56,7 @@ The predicted price is: IDR {{ prediction }}.
 
 Paraphrase the information above in a complete sentence. Include the specificationa and predicted price in the sentence.
 Format the price in Indonesian Rupiah (IDR) with period as the thousand separator and two decimal places.
+If the predicted price is equal to zero, just say that you don't know the answer.
 Always answer in Bahasa Indonesia.
 """
 

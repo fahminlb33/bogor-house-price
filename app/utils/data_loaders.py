@@ -3,7 +3,7 @@ import json
 import pandas as pd
 import streamlit as st
 
-from babel.numbers import format_number, format_compact_currency
+from babel.numbers import format_compact_currency, format_currency
 
 
 def formatter_pvalue(x):
@@ -12,6 +12,10 @@ def formatter_pvalue(x):
 
 def format_price(x):
     return format_compact_currency(x, "IDR", locale="id_ID")
+
+
+def format_price_long(x):
+    return format_currency(x, "IDR", locale="id_ID")
 
 
 def percent_change(x, y):

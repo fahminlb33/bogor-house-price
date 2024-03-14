@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import streamlit as st
 
 from haystack import Pipeline
@@ -14,6 +16,25 @@ from utils.llm_prompts import (PROMPT_FOR_ROUTER,
                                PROMPT_FOR_PREDICTION_RESULT, PROMPT_FOR_RAG)
 from utils.llm_components import (PredictHousePrice,
                                   ReturnDocumentsFromRetriever)
+
+
+@dataclass
+class QueryDocument:
+    id: str
+    city: str
+    district: str
+    price: float
+    url: str
+    main_image_url: str
+
+
+@dataclass
+class QueryResult:
+    success: bool
+    content: str
+    documents: list[QueryDocument]
+    raw: dict
+
 
 AGENT_ROUTER = [{
     "condition": "{{'PREDICTION' in replies[0]}}",
@@ -123,7 +144,7 @@ def get_rag_pipeline(_document_store: QdrantDocumentStore) -> Pipeline:
     return pipeline
 
 
-def query(_pipeline: Pipeline, question: str) -> dict:
+def query(_pipeline: Pipeline, question: str) -> QueryResult:
     # get settings
     settings = get_settings()
 
@@ -139,4 +160,41 @@ def query(_pipeline: Pipeline, question: str) -> dict:
         },
         debug=settings.debug)
 
-    return result
+    # print if debug
+    if settings.debug:
+        print(result)
+
+    # check if the result is RAG
+    if "prediction_llm" in result:
+        return QueryResult(
+            success=True,
+            content=result["prediction_result_llm"]["replies"][0],
+            documents=[],
+            raw=result)
+
+    # create query documents
+    inserted_ids = []
+    documents = []
+
+    for doc in result["rag_doc_returner"]["documents"]:
+        # check if the document is already inserted
+        if doc["id"] in inserted_ids:
+            continue
+
+        # insert the document
+        inserted_ids.append(doc["id"])
+        documents.append(
+            QueryDocument(id=doc["id"],
+                          city=doc["city"],
+                          district=doc["district"],
+                          price=doc["price"],
+                          url=doc["url"],
+                          main_image_url=doc["main_image_url"]))
+
+    # parse the result
+    response = QueryResult(success=True,
+                           content=result["rag_llm"]["replies"][0],
+                           documents=documents,
+                           raw=result)
+
+    return response

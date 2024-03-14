@@ -28,6 +28,7 @@ class AppSettings(BaseSettings):
     qdrant_hnsw_ef: int = Field(default=100)
 
     # llm
+    openai_api_key: str = Field()
     openai_chat_model: str = Field(default="gpt-3.5-turbo")
     openai_embedding_model: str = Field(default="text-embedding-3-small")
 

@@ -1,28 +1,18 @@
 from dataclasses import dataclass
 
-import requests
 import streamlit as st
 import extra_streamlit_components as stx
 
 from utils.db import track_prompt
 from utils.cookies import ensure_user_has_session, get_session_id
-from utils.llm import query, get_rag_pipeline, get_document_store
-
-
-@dataclass
-class HouseRecord:
-    city: str
-    district: str
-    price: float
-    url: str
-    main_image_url: str
+from utils.llm import query, get_rag_pipeline, get_document_store, QueryDocument
 
 
 @dataclass
 class ChatRecord:
     role: str
     content: str
-    results: list[HouseRecord]
+    results: list[QueryDocument]
 
 
 MAX_MESSAGE_LENGTH = 500
@@ -32,21 +22,6 @@ MAX_MESSAGE_LENGTH = 500
 def load_css():
     with open("assets/style.css") as f:
         return f.read()
-
-
-@st.cache_resource()
-def proxy_image(url: str):
-    # set headers
-    headers = {
-        'User-Agent':
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
-    }
-
-    # get image
-    response = requests.get(url, headers=headers)
-
-    # return image
-    return response.content
 
 
 def render_chat(message: ChatRecord):
@@ -62,6 +37,7 @@ def render_chat(message: ChatRecord):
         # render content
         st.markdown(message.content)
 
+        # render results
         if len(message.results) > 0:
             # create columns with a maximum of 5 results per column
             # if there are more than 5 results, the columns will be created in a new row
@@ -71,10 +47,13 @@ def render_chat(message: ChatRecord):
                     cols = st.columns(5)
 
                 # format price
-                price = f"Rp{result.price:,.0f}jt" if result.price < 1000 else f"Rp{(result.price / 1000):,.0f}m"
                 with cols[i % 5]:
+                    # display image, if available
                     if result.main_image_url:
-                        st.image(proxy_image(result.main_image_url))
+                        st.image(result.main_image_url)
+
+                    # display price and link
+                    price = f"Rp{result.price:,.0f}jt" if result.price < 1000 else f"Rp{(result.price / 1000):,.0f}m"
                     st.markdown(
                         f'<div class="text-caption">{price}<br><a href="{result.url}">{result.district}, {result.city}</a></div>',
                         unsafe_allow_html=True)
@@ -137,29 +116,18 @@ def main():
             doc_store = get_document_store()
             pipeline = get_rag_pipeline(doc_store)
 
-            # query LLM
-            result = query(pipeline, prompt)
-            response = result["llm"]["replies"][0]
-            print(result)
+            # query and parse LLM response
+            response = query(pipeline, prompt)
 
-            # create record
-            house_records = []
-            inserted_ids = []
-            for doc in result["return_docs"]["documents"]:
-                if doc["id"] in inserted_ids:
-                    continue
-
-                inserted_ids.append(doc["id"])
-                house_records.append(
-                    HouseRecord(city=doc["city"],
-                                district=doc["district"],
-                                price=doc["price"],
-                                url=doc["url"],
-                                main_image_url=doc["main_image_url"]))
-
-            chat_record = ChatRecord(role="assistant",
-                                     content=response,
-                                     results=house_records)
+            # check if we get a valid response
+            if not response.success:
+                chat_record = ChatRecord(
+                    role="assistant",
+                    content="Maaf, saya tidak mengerti. Silakan coba lagi.")
+            else:
+                chat_record = ChatRecord(role="assistant",
+                                         content=response.content,
+                                         results=response.documents)
 
             # display assistant response in chat message container
             render_chat(chat_record)
@@ -168,7 +136,7 @@ def main():
             st.session_state.messages.append(chat_record)
 
             # track prompt
-            track_prompt(get_session_id(cookie_manager), prompt, result)
+            track_prompt(get_session_id(cookie_manager), prompt, response.raw)
 
 
 if __name__ == "__main__":
