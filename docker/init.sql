@@ -66,13 +66,10 @@ CREATE TABLE `openai_usages` (
   `completion_tokens` int(11) NOT NULL,
   `total_tokens` int(11) NOT NULL,
   `prompt_id` varchar(36) NOT NULL,
-  `response_id` varchar(36) DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `prompt_id` (`prompt_id`),
-  KEY `response_id` (`response_id`),
-  CONSTRAINT `openai_usages_ibfk_1` FOREIGN KEY (`prompt_id`) REFERENCES `openai_prompts` (`id`),
-  CONSTRAINT `openai_usages_ibfk_2` FOREIGN KEY (`response_id`) REFERENCES `openai_responses` (`id`)
+  CONSTRAINT `openai_usages_ibfk_1` FOREIGN KEY (`prompt_id`) REFERENCES `openai_prompts` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
