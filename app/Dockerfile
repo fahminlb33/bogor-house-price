@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 ENV PYTHONUNBUFFERED=1
 
 # install dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
 	curl \
     software-properties-common \
@@ -19,7 +19,7 @@ RUN pip install --upgrade pip
 
 # install python dependencies
 COPY ./requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # copy project
 COPY . .
