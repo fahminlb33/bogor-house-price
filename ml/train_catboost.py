@@ -124,7 +124,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset",
         help="Input dataset from L3",
-        default="./dataset/curated/marts_ml_train_sel_all.parquet")
+        default="./dataset/curated/marts_ml_train_sel_manual.parquet")
     parser.add_argument("--output-path",
                         help="Output path for model and metrics",
                         default=f"./ml_models/catboost-{today}")
