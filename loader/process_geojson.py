@@ -16,10 +16,6 @@ SHAPEFILE_PATHS = [
 ]
 
 
-def MultipleArgsParser(s):
-    return [str(item) for item in s.split(',')]
-
-
 class ShapefileToGeojsonPipeline:
 
     def __init__(self, shapefile_paths: list[str], output_file: str) -> None:
@@ -45,16 +41,15 @@ if __name__ == '__main__':
     # setup command-line arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--shapefiles",
-                        nargs=MultipleArgsParser,
-                        help="Shapefiles to convert to GeoJSON",
-                        default=SHAPEFILE_PATHS)
     parser.add_argument("--output-file",
                         help="Output file for GeoJSON",
                         default="./dataset/bogor.json")
+    parser.add_argument("--shapefiles", help="Shapefiles to convert to GeoJSON")
 
     args = parser.parse_args()
+    input_files = args.shapefiles.split(
+        ",") if args.shapefiles is not None else SHAPEFILE_PATHS
 
     # run pipeline
-    pipeline = ShapefileToGeojsonPipeline(args.shapefiles, args.output_file)
+    pipeline = ShapefileToGeojsonPipeline(input_files, args.output_file)
     pipeline.run()
