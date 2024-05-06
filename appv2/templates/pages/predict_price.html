@@ -1,0 +1,50 @@
+{% extends "components/base.html" %}
+
+{% import 'components/form.html' as fc %}
+
+{% set active_page = "predict_price" %}
+
+{% block title %}Prediksi Harga Rumah{% endblock %}
+
+{% block content %}
+  <h1 class="title">Prediksi Harga Rumah</h1>
+
+  <div class="box">
+    <form action="{{ url_for('predictions.predict') }}" method="post" enctype="multipart/form-data">
+      <h4 class="title is-4">Spesifikasi</h4>
+        <div class="columns">
+            <div class="column">
+                {{ fc.form_input("luas_tanah", "number", "Luas tanah (m<sup>2</sup>)") }}
+                {{ fc.form_input("luas_bangunan", "number", "Luas bangunan (m<sup>2</sup>)") }}
+                {{ fc.form_input("daya_listrik", "number", "Daya listrik (VA)") }}
+                {{ fc.form_input("jumlah_lantai", "number", "Jumlah lantai") }}
+            </div>
+            <div class="column">
+                {{ fc.form_input("kamar_mandi", "number", "Jumlah Kamar Mandi") }}
+                {{ fc.form_input("kamar_tidur", "number", "Jumlah Kamar Mandi") }}
+                {{ fc.form_input("kamar_pembantu", "number", "Jumlah Kamar Mandi") }}
+                {{ fc.form_input("kamar_mandi_pembantu", "number", "Jumlah Kamar Mandi") }}
+            </div>
+            <div class="column">
+                {{ fc.form_input("dapur", "number", "Jumlah Kamar Mandi") }}
+                {{ fc.form_input("lebar_jalan", "number", "Jumlah Kamar Mandi") }}
+                {{ fc.form_input("carport", "number", "Jumlah Kamar Mandi") }}
+            </div>
+        </div>
+
+        <h4 class="title is-4">Fasilitas dan Lainnya</h4>
+        {{ fc.form_checkboxes("fasilitas", facilities, "Fasilitas") }}
+        {{ fc.form_checkboxes("house_material", house_materials, "Bahan bangunan") }}
+        {{ fc.form_checkboxes("tags", tags, "Tags") }}
+        
+        <div class="field mt-4">
+          <p class="control">
+            <button class="button is-success" type="submit">
+              Prediksi
+            </button>
+          </p>
+        </div>
+    </form>
+  </div>
+{% endblock %}
+

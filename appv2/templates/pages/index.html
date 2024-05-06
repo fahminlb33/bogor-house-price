@@ -1,0 +1,240 @@
+{% extends "components/base.html" %}
+
+{% block title %}Beranda{% endblock %}
+
+{% set active_page = "index" %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
+<style>
+  .chart-correlations {
+    height: 500px;
+    width: 300px;
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="columns">
+  <div class="column">
+    <div class="box">
+      <p class="title is-3">{{ stats.top_district }} <small>({{ stats.top_district_count }})</small></p>
+      <p class="subtitle">Kecamatan dengan Listing Terbanyak</p>
+    </div>
+  </div>
+  <div class="column">
+    <div class="box">
+      <p class="title is-3">{{ stats.median_price }}</p>
+      <p class="subtitle">Median Harga Rumah</p>
+    </div>
+  </div>
+  <div class="column">
+    <div class="box">
+      <p class="title is-3">{{ stats.mean_price }}</p>
+      <p class="subtitle">Rata-Rata Harga Rumah</p>
+    </div>
+  </div>
+</div>
+<div class="columns">
+  <div class="column">
+    <div class="box">
+      <p class="title is-3">{{ stats.median_price_by_land_area }}</p>
+      <p class="subtitle">Median Harga per Luas Tanah (m<sup>2</sup>)</p>
+    </div>
+  </div>
+  <div class="column">
+    <div class="box">
+      <p class="title is-3">{{ stats.median_price_by_building_area }}</p>
+      <p class="subtitle">Median Harga per Luas Bangunan (m<sup>2</sup>)</p>
+    </div>
+  </div>
+</div>
+
+<div class="mt-6">
+  <h5 class="title is-5">25 Kecamatan dengan Listing Terbanyak</h5>
+  <canvas id="chart_listing_count" height="100"></canvas>
+</div>
+
+<div class="mt-3">
+  <h5 class="title is-5">Median Harga Rumah di Bogor</h5>
+  <canvas id="chart_median_price" height="100"></canvas>
+</div>
+
+<div class="mt-3">
+  <h5 class="title is-5">Korelasi Harga Rumah dengan Semua Variabel</h5>
+  <div class="grid">
+    <div class="cell">
+      <canvas class="chart-correlations" id="chart_correlations_positive"></canvas>
+    </div>
+    <div class="cell">
+      <canvas class="chart-correlations" id="chart_correlations_negative"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="mt-6">
+  <h5 class="title is-5">Peta Listing Rumah per Kecamatan</h5>
+  <div id="bogor_map"></div>
+</div>
+
+<div class="mt-6">
+  <h5 class="title is-5">Peta Titik Layanan Publik</h5>
+  <div id="bogor_map_amenities"></div>
+</div>
+{% endblock %}
+
+
+{% block page_script %}
+{{ super() }}
+<!-- Dashboard Metrics -->
+<script>
+  // charts
+  fetch("{{ url_for('dashboard.chart_listing_count') }}").then(res => res.json()).then(data => {
+    const topk = 25;
+    const top10 = data.slice(0, topk);
+    top10.push({ district: 'Lainnya', count: data.slice(topk).reduce((acc, cur) => acc + cur.count, 0) });
+
+    new Chart(document.getElementById('chart_listing_count'), {
+      type: 'bar',
+      data: {
+        datasets: [{
+          label: 'Banyaknya Listing Rumah',
+          data: top10,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        },
+        parsing: {
+          xAxisKey: 'district',
+          yAxisKey: 'count'
+        }
+      }
+    });
+  });
+
+  fetch("{{ url_for('dashboard.chart_median_price') }}").then(res => res.json()).then(data => {
+    new Chart(document.getElementById('chart_median_price'), {
+      type: 'bar',
+      data: {
+        datasets: [{
+          label: 'Median Harga Rumah',
+          data: data,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        },
+        parsing: {
+          xAxisKey: 'district',
+          yAxisKey: 'price_median'
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              footer: function (items) {
+                return "Banyaknya listing: " + items[0].raw.count
+              },
+            }
+          }
+        }
+      }
+    });
+  });
+
+  fetch("{{ url_for('dashboard.chart_correlations') }}").then(res => res.json()).then(data => {
+    new Chart(document.getElementById('chart_correlations_positive'), {
+      type: 'bar',
+      data: {
+        datasets: [{
+          label: 'Koefisien Korelasi Pearson',
+          data: data.filter(x => x.correlation >= 0),
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            beginAtZero: true
+          },
+        },
+        parsing: {
+          xAxisKey: 'correlation',
+          yAxisKey: 'variable',
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              footer: function (items) {
+                return "Metode: " + items[0].raw.method + "\n" +
+                  "P-value: " + items[0].raw.p_value.toFixed(4)
+              },
+            }
+          }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('chart_correlations_negative'), {
+      type: 'bar',
+      data: {
+        datasets: [{
+          label: 'Koefisien Korelasi Pearson',
+          data: data.filter(x => x.correlation < 0),
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            beginAtZero: true
+          },
+          y: {
+            position: "right"
+          }
+        },
+        parsing: {
+          xAxisKey: 'correlation',
+          yAxisKey: 'variable',
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              footer: function (items) {
+                return "Metode: " + items[0].raw.method + "\n" +
+                  "P-value: " + items[0].raw.p_value.toFixed(4)
+              },
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+
+<!-- Choropleth Map -->
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}
