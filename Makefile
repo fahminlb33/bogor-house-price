@@ -2,7 +2,7 @@ install:
 	pip install -r requirements.txt
 
 format:
-	yapf -i -r --style google --exclude 'transform/target/**/*.py' --exclude 'app_docs/**/*.py' .
+	yapf -i -r --style yapf --exclude 'transform/target/**/*.py' --exclude 'app_docs/**/*.py' .
 
 scrape:
 	cd scraper && \

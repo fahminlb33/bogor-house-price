@@ -9,5 +9,5 @@ from itemadapter import ItemAdapter
 
 class HargaRumahPipeline:
 
-    def process_item(self, item, spider):
-        return item
+  def process_item(self, item, spider):
+    return item
