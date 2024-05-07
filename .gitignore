@@ -172,6 +172,7 @@ ml_models/
 
 # credentials
 CREDENTIALS
+.docker
 
 # temp dir
 tmp/
