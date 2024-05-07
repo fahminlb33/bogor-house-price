@@ -33,7 +33,7 @@ class AppSettings(BaseSettings):
   QDRANT_TOP_K: int = Field(default=3)
   QDRANT_HNSW_M: int = Field(default=16)
   QDRANT_HNSW_EF: int = Field(default=100)
-  
+
   QDRANT_DOCUMENT_INDEX: str = Field()
   QDRANT_DOCUMENT_EMBEDDING_DIM: int = Field(default=1536)
 

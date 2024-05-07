@@ -213,35 +213,37 @@ class HouseImageSearchTool(BaseTool):
     self.logger.error("Running image RAG pipeline...")
 
     # find images
-    documents = searcher.search(path_real)
+    pipe_documents = searcher.search(path_real)
 
     # run the pipeline
-    result = self.pipeline.run({
+    pipe_result = self.pipeline.run({
         "prompt": {
             "question":
-                "I want a house recommendation based on the provided context",
+                "I want a house recommendation based on the provided context. You must answer in Bahasa Indonesia.",
             "documents":
-                documents
+                pipe_documents
         }
     })
 
     # create query documents
     documents = []
-    for doc in documents:
+    for doc in pipe_documents:
       # insert the document
       documents.append(
           HouseDocument(
-              id=doc["id"],
-              city=doc["city"],
-              district=doc["district"],
-              price=doc["price"],
-              url=doc["url"],
-              main_image_url=doc["main_image_url"]))
+              id=doc.meta["id"],
+              city=doc.meta["city"],
+              district=doc.meta["district"],
+              price=doc.meta["price"],
+              url=doc.meta["url"],
+              image_url=doc.meta["main_image_url"]))
 
     # parse the result
     result = HouseRecommendationResult(
-        success=True, reply=result["llm"]["replies"][0], documents=documents)
-    usage = OpenAIUsage.from_dict(result["llm"]["meta"][0])
+        success=True,
+        reply=pipe_result["llm"]["replies"][0],
+        documents=documents)
+    usage = OpenAIUsage.from_dict(pipe_result["llm"]["meta"][0])
 
     return result, usage
 

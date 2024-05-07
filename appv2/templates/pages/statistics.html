@@ -74,18 +74,9 @@
 
       fetch("{{ url_for('statistics.chart_listing_price_hist', district_sk=district_sk) }}").then(res => res.json()).then(data => {
         const dataMap = []
-        for (let i = 0; i < data.length; i++) {
-          if (i == 0) {
-            dataMap.push({
-              bucket: `0 - ${format_million(data[i].bucket)}`,
-              count: data[i].count
-            })
-
-            continue;
-          }
-
+        for (let i = 0; i < data.length -1; i++) {
           dataMap.push({
-            bucket: `${format_million(data[i-1].bucket)} - ${format_million(data[i].bucket)}`,
+            bucket: `${format_million(data[i].bucket)} - ${format_million(data[i+1].bucket)}`,
             count: data[i].count
           })
         }

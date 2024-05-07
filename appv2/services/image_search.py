@@ -3,6 +3,7 @@ import tensorflow_hub as hub
 
 from haystack import Document
 from qdrant_client import QdrantClient
+from qdrant_client.models import Filter, FieldCondition, MatchValue, MatchAny
 
 from appv2.utils.shared import get_settings, get_logger
 
@@ -38,8 +39,7 @@ class ImageSearcher:
 
     # load the image and preprocess
     img = tf.keras.utils.load_img(image_path, target_size=(224, 224))
-    x = tf.keras.utils.img_to_array(img)
-    x = x / 255.0
+    x = tf.keras.utils.img_to_array(img) / 255.0
     x = tf.expand_dims(x, axis=0)
 
     # run inference
@@ -52,16 +52,22 @@ class ImageSearcher:
         collection_name=self.settings.QDRANT_IMAGE_INDEX,
         query_vector=features,
         limit=self.settings.QDRANT_TOP_K,
-        with_payload=["ref_doc_id"])
+        with_payload=["document_id"])
 
     # retrieve documents
     self.logger.debug("Retrieving documents...")
-    doc_ids = [item.payload["ref_doc_id"] for item in results]
-    documents = self.client.retrieve(
-        self.documents_index, doc_ids, with_payload=True)
+    doc_ids = [item.payload["document_id"] for item in results]
+    documents, _ = self.client.scroll(
+        collection_name=self.settings.QDRANT_DOCUMENT_INDEX,
+        scroll_filter=Filter(
+            must=[FieldCondition(key="meta.id", match=MatchAny(any=doc_ids))]),
+        with_payload=True)
 
     # return results
-    return [Document(doc.id, doc.payload["content"]) for doc in documents]
+    return [
+        Document(doc.id, doc.payload["content"], meta=doc.payload["meta"])
+        for doc in documents
+    ]
 
 
 searcher = ImageSearcher()

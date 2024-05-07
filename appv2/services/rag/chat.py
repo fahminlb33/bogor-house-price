@@ -99,12 +99,12 @@ class ChatRAG:
 
           # find the correspoding function and call it with the given arguments
           fresult, fusage = self.tools[fname](**fargs)
-          print(fresult)
+          print("FUNC RESULT", fresult)
 
           # remove documents if exists in the fresult
           fresult_safe = dataclasses.asdict(fresult)
           fresult_safe.pop("documents", None)
-          print(fresult_safe)
+          print("FUNC RES SAFE", fresult_safe)
 
           # append to archive
           chat_archive.append(

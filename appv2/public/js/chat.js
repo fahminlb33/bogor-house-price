@@ -28,6 +28,14 @@ class ChatMessage extends HTMLElement {
   // --- element HTML
   render() {
     const imageUrl = this.chatrole === "assistant" ? "/assets/img/assistant.png" : "/assets/img/user.png";
+    const details = (link) => {
+      if (link.address === "") return "";
+      return `
+        ${link.address}<br />
+        ${(link.price * 1000000).toLocaleString('id-ID', {style: 'currency', currency: 'IDR'})}
+      `
+    }
+
     this.innerHTML = `
       <div class="message-item-box">
         <article class="media">
@@ -48,8 +56,7 @@ class ChatMessage extends HTMLElement {
               <a href="${link.url}" target="_blank" class="button is-small mr-4">
                 <div class="flex is-flex-direction-column">
                   <img class="image is-4by3 house-image mb-2" src="${link.image_url}">
-                  ${link.address}<br />
-                  ${(link.price * 1000000).toLocaleString('id-ID', {style: 'currency', currency: 'IDR'})}
+                  ${details(link)}
                 </div>
               </a>
             `).join('\n')}
@@ -78,6 +85,7 @@ function send() {
   // check if input is empty
   if (chatBoxTextarea.value === "" && uploadButton.files.length === 0) return;
   sendButton.setAttribute("disabled", "disabled");
+  uploadButton.setAttribute("disabled", "disabled");
   chatBoxTextarea.setAttribute("disabled", "disabled");
 
   // build message
@@ -149,7 +157,11 @@ function send() {
   .finally(() => {
     // enable controls
     sendButton.removeAttribute("disabled");
+    uploadButton.removeAttribute("disabled");
     chatBoxTextarea.removeAttribute("disabled");
+
+    // always clear file upload
+    uploadButton.value = null;
   })
 }
 

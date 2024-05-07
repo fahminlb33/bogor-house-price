@@ -172,3 +172,6 @@ ml_models/
 
 # credentials
 CREDENTIALS
+
+# temp dir
+tmp/

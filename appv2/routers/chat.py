@@ -40,7 +40,6 @@ def completion():
 
     # check file type
     ftype = filetype.guess(file.stream)
-    print(ftype)
     if ftype is None or ftype.extension not in ["jpg", "jpeg", "png"]:
       abort(400)
 
