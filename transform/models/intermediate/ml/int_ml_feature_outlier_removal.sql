@@ -1,10 +1,10 @@
 {%- set query_q1 -%}
-	SELECT quantile_disc(price, 0.25) FROM {{ ref('int_ml_feature_imputation') }}
+	SELECT quantile_disc(price, 0.25) FROM {{ ref('int_ml_feature_construction') }}
 {%- endset -%}
 {%- set q1 = (dbt_utils.get_single_value(query_q1) or 0) | float -%}
 
 {%- set query_q3 -%}
-	SELECT quantile_disc(price, 0.75) FROM {{ ref('int_ml_feature_imputation') }}
+	SELECT quantile_disc(price, 0.75) FROM {{ ref('int_ml_feature_construction') }}
 {%- endset -%}
 {%- set q3 = (dbt_utils.get_single_value(query_q3) or 0) | float -%}
 
@@ -19,7 +19,7 @@ outliers_iqr AS (
 	SELECT
 		*
 	FROM
-		{{ ref('int_ml_feature_imputation') }}
+		{{ ref('int_ml_feature_construction') }}
 	WHERE
 		price BETWEEN {{ q1 - IQR_THRESHOLD * iqr }} AND {{ q3 + IQR_THRESHOLD * iqr }}
 ),

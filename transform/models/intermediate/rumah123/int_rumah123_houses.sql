@@ -1,15 +1,6 @@
-{%- set query_median_price -%}
-	SELECT
-		median(price)
-	FROM
-		{{ ref('stg_rumah123_houses') }}
-{%- endset -%}
-
-{%- set median_price = dbt_utils.get_single_value(query_median_price) or 0 -%}
-
 SELECT
     id,
-    coalesce(price, {{ median_price }}) AS price,
+    price,
     installment,
     district,
     city,
@@ -19,3 +10,5 @@ SELECT
     scraped_at
 FROM
     {{ ref('stg_rumah123_houses') }}
+WHERE
+    price IS NOT NULL
