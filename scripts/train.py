@@ -98,8 +98,8 @@ class TrainPipeline(TrainerMixin):
     ])
 
     # preprocess using sklearn pipeline
-    X_train = self.compose_transformers.fit_transform(self.df_train.drop(columns=["price"]))
-    X_test = self.compose_transformers.transform(self.df_test.drop(columns=["price"]))
+    X_train = self.df_train.drop(columns=["price"])
+    X_test = self.df_test.drop(columns=["price"])
 
     y_train = self.df_train["price"]
     y_test = self.df_test["price"]
@@ -110,6 +110,11 @@ class TrainPipeline(TrainerMixin):
     # split data
     X_train, X_test = self.df_train.drop(columns=["price"]), self.df_test.drop(columns=["price"])
     y_train, y_test = self.df_train["price"], self.df_test["price"]
+
+    # categorical columns
+    self.cat_cols = [
+        col for col in self.df_train.select_dtypes(include=["object"]).columns
+    ]
 
     # create pool
     train_pool = Pool(data=X_train, label=y_train, cat_features=self.cat_cols)
@@ -160,7 +165,10 @@ class TrainPipeline(TrainerMixin):
 
     # model importance
     self.logger.info("Saving model importance...")
-    forest_importances = pd.Series(model.feature_importances_, index=list(self.df_train.columns)) \
+    importance_cols = list(self.df_train.columns)
+    importance_cols.remove("price")
+    
+    forest_importances = pd.Series(model.feature_importances_, index=importance_cols) \
         .sort_values(ascending=False)
     self.save_importances(forest_importances)
 
@@ -169,7 +177,10 @@ class TrainPipeline(TrainerMixin):
     (X_train, y_train), (X_test, y_true) = self.get_data_sklearn()
 
     # create model
-    model = RandomForestRegressor(**self.params)
+    model =Pipeline(steps=[
+      ("preprocessor", self.compose_transformers),
+      ("regressor",  RandomForestRegressor(**self.params))
+    ]) 
 
     # fit model
     self.logger.info("Training model...")
@@ -190,7 +201,13 @@ class TrainPipeline(TrainerMixin):
     self.logger.info("Saving model...")
     joblib.dump(model, os.path.join(self.output_path, f"{self.algorithm}_model.joblib"))
 
-    # model importance
+    # --- model importance
+    # load model
+    forest = model.named_steps["regressor"]
+
+    # get importance and calculate standard deviation
+    importances = forest.feature_importances_
+
     # normalize feature names
     feature_names = self.compose_transformers.get_feature_names_out()
     feature_names = [
@@ -204,7 +221,8 @@ class TrainPipeline(TrainerMixin):
     ]
 
     # create importance series
-    forest_importances = pd.Series(model.feature_importances_, index=feature_names).sort_values(ascending=False)
+    forest_importances = pd.Series(importances, index=feature_names).sort_values(ascending=False)
+    
     self.save_importances(forest_importances)
 
   def train(self):
