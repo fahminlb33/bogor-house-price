@@ -60,7 +60,7 @@ class DatasetSplitter(TrainerMixin):
 
   @staticmethod
   def should_use_point_biser_corr(column):
-    return "tag_" in column or "facility_" in column or "house_" in column
+    return "tag_" in column or "facility_" in column or "_mat_" in column
 
   @staticmethod
   def impute(df_train: pd.DataFrame, df_test: pd.DataFrame, column: str, method: str, constant_value=""):
