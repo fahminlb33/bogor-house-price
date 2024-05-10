@@ -124,7 +124,7 @@ class TrainPipeline(TrainerMixin):
   
   def save_importances(self, importance_series: pd.Series):
       # save importance
-      importance_series.to_csv(f"{self.algorithm}_importance.csv")
+      importance_series.to_csv(os.path.join(self.output_path, f"{self.algorithm}_importance.csv"))
 
       # plot importance
       fig, ax = plt.subplots(figsize=(20, 10))
