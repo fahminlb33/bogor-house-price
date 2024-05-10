@@ -288,9 +288,11 @@ if __name__ == "__main__":
 
   parser.add_argument(
       "--dataset",
+      required=True,
       help="Input dataset from L3",
       default="./dataset/curated/marts_ml_train_sel_manual.parquet")
-  parser.add_argument("--algorithm", help="Algorithm to tune", choices=["catboost", "random_forest"])
+  parser.add_argument("--algorithm", required=True, help="Algorithm to tune", choices=["catboost", "random_forest"])
+  parser.add_argument("--experiment-name", required=True, help="MLflow experiment name")
   parser.add_argument("--tracking-url", help="MLflow tracking server URL")
 
   args = parser.parse_args()
@@ -312,13 +314,13 @@ if __name__ == "__main__":
   objective.load_data()
 
   # create mlflow experiment
-  experiment_id = get_or_create_experiment("Bogor House Price: Random Forest")
+  experiment_id = get_or_create_experiment(args.experiment_name)
   mlflow.set_experiment(experiment_id=experiment_id)
 
   # create study
   study = optuna.create_study(
       direction="minimize",
-      study_name="random_forest",
+      study_name=args.algorithm,
       storage="sqlite:///bogor_houses_v2.db",
       load_if_exists=True)
   study.optimize(objective, n_trials=100)
