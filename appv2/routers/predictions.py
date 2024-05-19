@@ -1,8 +1,8 @@
 from flask import Blueprint, request, g, render_template
 
-from appv2.services.price_predictor import predictor, AVAILABLE_FACILITIES, AVAILABLE_HOUSE_MATERIAL, AVAILABLE_TAGS
-from appv2.services import format_price_long
-from appv2.services.repository.tracking import track_prediction
+from services.price_predictor import predictor, AVAILABLE_FACILITIES, AVAILABLE_HOUSE_MATERIAL, AVAILABLE_TAGS
+from services import format_price_long
+from services.repository.tracking import track_prediction
 
 router = Blueprint('predictions', __name__)
 

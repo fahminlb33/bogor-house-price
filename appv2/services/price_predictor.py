@@ -2,7 +2,7 @@ import pandas as pd
 
 from catboost import CatBoostRegressor
 
-from appv2.utils.shared import get_settings, get_logger
+from utils.shared import get_settings, get_logger
 
 AVAILABLE_FACILITIES = [
     "AC", "Keamanan", "Laundry", "Masjid", 'Ruang Makan', 'Ruang Tamu'

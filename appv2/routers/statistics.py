@@ -2,8 +2,8 @@ import dataclasses
 
 from flask import Blueprint, request, render_template, abort
 
-from appv2.utils.shared import cache
-from appv2.services.repository.data_mart import list_districts, statistics, house_histogram_bar
+from utils.shared import cache
+from services.repository.data_mart import list_districts, statistics, house_histogram_bar
 
 router = Blueprint('statistics', __name__)
 

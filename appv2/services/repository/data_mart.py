@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import String, Integer, Float, text
 
-from appv2.utils.db import db_session
-from appv2.services import format_price, format_price_long
+from utils.db import db_session
+from services import format_price, format_price_long
 
 
 @dataclass

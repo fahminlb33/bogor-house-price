@@ -6,7 +6,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from flask import Flask
 
-from appv2.utils.shared import get_settings, cache
+from utils.shared import get_settings, cache
 
 
 def create_app():
@@ -25,14 +25,14 @@ def create_app():
   cache.init_app(app)
 
   # initialize database
-  from appv2.utils.db import db_session
+  from utils.db import db_session
 
   @app.teardown_appcontext
   def shutdown_session(exception=None):
     db_session.remove()
 
   # register blueprints
-  from appv2.routers import AboutRouter, DashboardRouter, ChatAPIRouter, StatisticsAPIRouter, PredictionsAPIRouter
+  from routers import AboutRouter, DashboardRouter, ChatAPIRouter, StatisticsAPIRouter, PredictionsAPIRouter
   app.register_blueprint(AboutRouter)
   app.register_blueprint(DashboardRouter)
   app.register_blueprint(ChatAPIRouter)

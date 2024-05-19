@@ -2,8 +2,8 @@ import dataclasses
 
 from flask import Blueprint, render_template
 
-from appv2.utils.shared import cache
-from appv2.services.repository.data_mart import (statistics,
+from utils.shared import cache
+from services.repository.data_mart import (statistics,
                                                  house_listing_count,
                                                  house_price_median,
                                                  house_variable_correlation,

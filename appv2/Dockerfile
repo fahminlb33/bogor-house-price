@@ -2,7 +2,7 @@
 FROM python:3.11.9-bookworm
 
 # set work directory
-WORKDIR /usr/src/appv2
+WORKDIR /usr/src/app
 
 # set environment variables
 ENV PYTHONUNBUFFERED=1

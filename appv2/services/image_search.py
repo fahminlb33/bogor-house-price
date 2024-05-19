@@ -5,7 +5,7 @@ from haystack import Document
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchValue, MatchAny
 
-from appv2.utils.shared import get_settings, get_logger
+from utils.shared import get_settings, get_logger
 
 
 class ImageSearcher:

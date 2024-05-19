@@ -4,7 +4,7 @@ from sqlalchemy import String, DateTime, create_engine
 from sqlalchemy.sql import func
 from sqlalchemy.orm import DeclarativeBase, Mapped, scoped_session, sessionmaker, mapped_column
 
-from appv2.utils.shared import get_settings
+from utils.shared import get_settings
 
 engine = create_engine(get_settings().SQLALCHEMY_DATABASE_URI)
 db_session = scoped_session(

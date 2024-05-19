@@ -5,9 +5,9 @@ from typing import Any
 from haystack.dataclasses import ChatMessage
 from haystack.components.generators.chat import OpenAIChatGenerator
 
-from appv2.utils.shared import get_settings
-from appv2.services.rag.prompts import PROMPT_FOR_AGENT
-from appv2.services.rag.tools import (BaseTool, OpenAIUsage, HouseDocument,
+from utils.shared import get_settings
+from services.rag.prompts import PROMPT_FOR_AGENT
+from services.rag.tools import (BaseTool, OpenAIUsage, HouseDocument,
                                       HouseRecommendationTool,
                                       HouseImageSearchTool,
                                       HousePricePredictionTool)

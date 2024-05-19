@@ -4,10 +4,10 @@ import uuid
 import filetype
 from flask import Blueprint, request, render_template, abort, send_from_directory
 
-from appv2.utils.shared import cache, get_settings
-from appv2.services.rag.chat import rag, ChatHistory
-from appv2.services.rag.tools import HousePricePredictionTool
-from appv2.services.repository.tracking import session_id_by_token, get_messages, track_prompt
+from utils.shared import cache, get_settings
+from services.rag.chat import rag, ChatHistory
+from services.rag.tools import HousePricePredictionTool
+from services.repository.tracking import session_id_by_token, get_messages, track_prompt
 
 router = Blueprint('chat', __name__)
 

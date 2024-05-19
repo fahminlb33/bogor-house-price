@@ -1,7 +1,7 @@
 from sqlalchemy import String, Integer, Float, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from appv2.utils.db import Base
+from utils.db import Base
 
 # yapf: disable
 

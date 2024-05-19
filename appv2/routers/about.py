@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template
 
-from appv2.utils.shared import cache
+from utils.shared import cache
 
 router = Blueprint('about', __name__)
 

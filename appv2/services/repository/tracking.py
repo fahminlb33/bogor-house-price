@@ -3,10 +3,10 @@ import json
 
 from sqlalchemy.dialects.mysql import insert
 
-from appv2.utils.db import db_session
-from appv2.utils.models import (Prediction, Session, Chat, RetrievedDocument)
-from appv2.services.rag.chat import ChatItem
-from appv2.services.rag.tools import HousePricePredictionTool
+from utils.db import db_session
+from utils.models import (Prediction, Session, Chat, RetrievedDocument)
+from services.rag.chat import ChatItem
+from services.rag.tools import HousePricePredictionTool
 
 
 def session_id_by_token(token: str) -> str:

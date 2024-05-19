@@ -14,10 +14,10 @@ from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack_integrations.document_stores.qdrant import QdrantDocumentStore
 from haystack_integrations.components.retrievers.qdrant import QdrantEmbeddingRetriever
 
-from appv2.utils.shared import get_settings, get_logger
-from appv2.services.image_search import searcher
-from appv2.services.price_predictor import predictor
-from appv2.services.rag.prompts import PROMPT_FOR_RAG
+from utils.shared import get_settings, get_logger
+from services.image_search import searcher
+from services.price_predictor import predictor
+from services.rag.prompts import PROMPT_FOR_RAG
 
 
 @component
