@@ -6,9 +6,9 @@ services:
       - 3306:3306
     volumes:
       - mariadb:/var/lib/mysql
-      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     env_file:
-      - docker/mariadb.env
+      - mariadb.env
 
   qdrant:
     image: qdrant/qdrant:v1.9.1
@@ -20,7 +20,7 @@ services:
       - qdrant-snapshots:/qdrant/snapshots
 
   web:
-    image: fahminlb33/bogor-house-price:latest
+    image: fahminlb33/project-rumah-regresi:1.0.0
     restart: unless-stopped
     ports:
       - 443:8000
@@ -28,7 +28,7 @@ services:
       - mariadb
       - qdrant
     env_file:
-      - docker/web.env
+      - web.env
     volumes:
       - ./uploads:/opt/uploads
       - ./ssl:/etc/ssl
