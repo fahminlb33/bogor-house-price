@@ -167,6 +167,7 @@ catboost_info/
 crawls/
 
 # data
+data/
 dataset/
 dataset.bak/
 ml_models/
@@ -177,3 +178,7 @@ CREDENTIALS
 
 # temp dir
 tmp/
+
+# Caches
+scripts/cache
+notebooks/cache

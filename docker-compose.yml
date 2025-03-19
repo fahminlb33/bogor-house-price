@@ -1,41 +1,26 @@
 services:
-  mariadb:
-    image: mariadb:11.3.2
+  postgres:
+    image: paradedb/paradedb:latest
     restart: unless-stopped
     ports:
-      - 3306:3306
+      - 5432:5432
     volumes:
-      - mariadb:/var/lib/mysql
-      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres:/var/lib/postgresql/data/
     env_file:
-      - docker/mariadb.env
+      - docker/db.env
 
-  qdrant:
-    image: qdrant/qdrant:v1.9.1
-    restart: unless-stopped
-    ports:
-      - 8001:6333
-    volumes:
-      - qdrant-storage:/qdrant/storage
-      - qdrant-snapshots:/qdrant/snapshots
-
-  web:
-    build: appv2
-    restart: unless-stopped
-    ports:
-      - 443:8000
-    depends_on:
-      - mariadb
-      - qdrant
-    env_file:
-      - docker/web.env
-    volumes:
-      - ./uploads:/opt/uploads
-      - ./ssl:/etc/ssl
-      - ./cache:/opt/cache
-      - ./models:/opt/models
+  # web:
+  #   build: src/streamlit-rumah
+  #   restart: unless-stopped
+  #   ports:
+  #     - 443:8000
+  #   depends_on:
+  #     - mariadb
+  #     - qdrant
+  #   env_file:
+  #     - docker/web.env
+  #   volumes:
+  #     - ./docker/uploads:/opt/uploads
 
 volumes:
-  mariadb:
-  qdrant-storage:
-  qdrant-snapshots:
+  postgres:
