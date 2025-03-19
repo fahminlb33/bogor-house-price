@@ -1,0 +1,16 @@
+rumah123:
+  target: dev
+  threads: 2
+  outputs:
+    dev:
+      type: duckdb
+      path: '../../data/rumah.duckdb'
+      external_root: '../../data/curated'
+      extensions:
+        - httpfs
+        - parquet
+        - spatial
+      module_paths:
+        - plugins
+      plugins:
+        - module: rumah_plugin

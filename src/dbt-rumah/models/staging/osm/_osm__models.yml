@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: stg_osm_amenities
+    description: Agent/sales person responsible for listing/selling the house
+    columns:
+      - name: element
+        description: OpenStreetMap element type (node, way, relation)
+      - name: id
+        description: OpenStreetMap element ID
+      - name: amenity
+        description: Amenity type/category
+      - name: name
+        description: Amenity place name
+      - name: center
+        description: Center coordinate on the spheroid geometry
+      - name: geom
+        description: Spatial polygon/point geometry
+  - name: stg_osm_districts
+    description: Mapping from scraped Rumah123 address to the Shapefile attributes
+    columns:
+      - name: source
+        description: The address specified in the scraped Rumah123 property
+      - name: target
+        description: Corrected address from Nominatim data

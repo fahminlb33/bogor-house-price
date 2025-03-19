@@ -1,0 +1,181 @@
+version: 2
+
+models:
+  - name: marts_houses_downstream
+    description: House specification, facilities, and tags for building LLM embeddings
+    config:
+      tags: [llm, marts]
+    columns:
+      # property info
+      - name: id
+        description: Unique property listing ID
+        tests:
+          - not_null
+          - unique
+      - name: price
+        description: House price in million IDR
+        tests:
+          - not_null
+      - name: installment
+        description: House installment per month in million IDR
+        tests:
+          - not_null
+      - name: district
+        description: House district location
+        tests:
+          - not_null
+      - name: city
+        description: House city location
+        tests:
+          - not_null
+      - name: description
+        description: House property manually entered description
+      - name: url
+        description: House property listing URL to Rumah123
+        tests:
+          - not_null
+
+      # property specs
+      - name: kamar_tidur
+        description: Number of bedrooms
+        tests:
+          - not_null
+      - name: kamar_mandi
+        description: Number of bathrooms
+        tests:
+          - not_null
+      - name: kamar_pembantu
+        description: Number of maid rooms
+        tests:
+          - not_null
+      - name: kamar_mandi_pembantu
+        description: Number of maid bathrooms
+        tests:
+          - not_null
+      - name: dapur
+        description: Number of kitchens
+        tests:
+          - not_null
+      - name: luas_tanah
+        description: Land area in square meters
+        tests:
+          - not_null
+      - name: luas_bangunan
+        description: Building area in square meters
+        tests:
+          - not_null
+      - name: jumlah_lantai
+        description: Number of floors
+        tests:
+          - not_null
+      - name: carport
+        description: Number of carports
+        tests:
+          - not_null
+      - name: daya_listrik
+        description: Electricity capacity in watts
+        tests:
+          - not_null
+      - name: lebar_jalan
+        description: Road width in number of cars
+        tests:
+          - not_null
+      - name: tahun_dibangun
+        description: Year the building was built
+        tests:
+          - not_null
+      - name: tahun_di_renovasi
+        description: Year the building was last renovated
+        tests:
+          - not_null
+
+      # categorical columns
+      - name: tipe_properti
+        description: Type of property
+        tests:
+          - not_null
+      - name: sertifikat
+        description: Certificate type
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["SHM - Sertifikat Hak Milik", "HGB - Hak Guna Bangunan", "HP - Hak Pakai", "Lainnya"]
+      - name: kondisi_properti
+        description: Property condition
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['furnished', 'unfurnished', 'semi furnished']
+      - name: kondisi_perabotan
+        description: Furniture condition
+        tests:
+          - accepted_values:
+              values: ['furnished', 'unfurnished', 'semi furnished']
+      - name: hadap
+        description: Building orientation
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Utara', 'Timur Laut', 'Timur', 'Tenggara', 'Selatan', 'Barat Daya', 'Barat', 'Barat Laut']
+      - name: konsep_dan_gaya_rumah
+        description: House concept and style
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Minimalis Modern", "Modern", "Minimalis", "Scandinavian", "American Classic", "Modern Glass House", "Kontemporer", "Town House", "Paviliun", "Industrial"]
+      - name: pemandangan
+        description: View from the property
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Pemukiman Warga", "Pegunungan", "Perkotaan", "Pedesaan", "Taman Kota", "Pantai"]
+      - name: sumber_air
+        description: Water source
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["PAM atau PDAM", "Sumur Bor", "Sumur Pompa", "Sumur Resapan", "Sumur Galian"]
+      - name: garasi
+        description: Number of garages
+        tests:
+          - not_null
+
+      # boolean columns
+      - name: ruang_makan
+        description: Has dining room
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: ruang_tamu
+        description: Has living room
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: terjangkau_internet
+        description: Has internet connectivity
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: hook
+        description: Has hook for cable TV
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+
+      # extra facilities
+      - name: house_material
+        description: House building material
+      - name: floor_material
+        description: Floor material
+      - name: tags
+        description: Extra house information
+      - name: facilities
+        description: House facilities
+      - name: main_image_url
+        description: House front view image URL
+
+

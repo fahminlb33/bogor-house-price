@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: stg_administrative_area
+    description: Administrative area
+    columns:
+      - name: subdistrict
+        description: Subdistrict/village kecamatan/desa
+      - name: district
+        description: District/kecamatan
+      - name: city
+        description: City/kota
+      - name: province
+        description: Province/provinsi
+      - name: center
+        description: Center coordinate on the spheroid geometry
+        tests:
+          - not_null
+      - name: geom
+        description: Polygon geometry
+        tests:
+          - not_null

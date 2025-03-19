@@ -1,0 +1,41 @@
+version: 2
+
+sources:
+  - name: raw_osm
+    schema: project_rumah_regresi
+    description: House property listing from Rumah123
+    config:
+      tags: ["staging", "osm"]
+    tables:
+    - name: amenities
+      description: Public amenities coordinates and geometry from OpenStreetMap
+      meta:
+        external_location: "ST_Read('../../data/osm/amenities.json')"
+      columns:
+        - name: element
+          description: OpenStreetMap element type (node, way, relation)
+          type: VARCHAR
+        - name: id
+          type: INT
+          description: OpenStreetMap element ID
+        - name: amenity
+          type: VARCHAR
+          description: Amenity type/category
+        - name: name
+          type: VARCHAR
+          description: Amenity place name
+        - name: geom
+          type: GEOMETRY
+          description: Spatial polygon/point geometry
+
+    - name: district
+      description: Mapping from scraped Rumah123 address to the Shapefile attributes
+      meta:
+        external_location: "read_json_auto('../../data/osm/norm_district.json')"
+      columns:
+        - name: source
+          description: The address specified in the scraped Rumah123 property
+          type: VARCHAR
+        - name: target
+          type: VARCHAR
+          description: Corrected address from Nominatim data

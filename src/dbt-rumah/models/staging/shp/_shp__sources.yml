@@ -1,0 +1,105 @@
+version: 2
+
+x-columns: &shpcols
+  - name: KDPPUM
+    description:
+    type: VARCHAR
+  - name: NAMOBJ
+    type: VARCHAR
+    description: Desa/keluarahan/village/subdistrict name
+  - name: REMARK
+    type: VARCHAR
+    description: Auxiliary information
+  - name: KDPBPS
+    type: VARCHAR
+    description:
+  - name: FCODE
+    type: VARCHAR
+    description:
+  - name: LUASWH
+    type: DOUBLE
+    description:
+  - name: UUPP
+    type: VARCHAR
+    description:
+  - name: SRS_ID
+    type: VARCHAR
+    description:
+  - name: LCODE
+    type: VARCHAR
+    description:
+  - name: METADATA
+    type: VARCHAR
+    description:
+  - name: KDEBPS
+    type: VARCHAR
+    description:
+  - name: KDEPUM
+    type: VARCHAR
+    description:
+  - name: KDCBPS
+    type: VARCHAR
+    description:
+  - name: KDCPUM
+    type: VARCHAR
+    description:
+  - name: KDBBPS
+    type: VARCHAR
+    description:
+  - name: KDBPUM
+    type: VARCHAR
+    description:
+  - name: WADMKD
+    type: VARCHAR
+    description:
+  - name: WIADKD
+    type: VARCHAR
+    description:
+  - name: WADMKC
+    type: VARCHAR
+    description: Kecamatan/subdistrict name
+  - name: WIADKC
+    type: VARCHAR
+    description:
+  - name: WADMKK
+    type: VARCHAR
+    description: Kota/city name
+  - name: WIADKK
+    type: VARCHAR
+    description:
+  - name: WADMPR
+    type: VARCHAR
+    description: Provinsi/province name
+  - name: WIADPR
+    type: VARCHAR
+    description:
+  - name: TIPADM
+    type: BIGINT
+    description:
+  - name: SHAPE_Leng
+    type: DOUBLE
+    description: Polygon circumference
+  - name: SHAPE_Area
+    type: DOUBLE
+    description: Polygon area
+  - name: geom
+    type: GEOMETRY
+    description: Administrative area geometry (polygon)
+
+sources:
+  - name: raw_shp
+    schema: project_rumah_regresi
+    description: Administrative area of Kabupaten/Kota Bogor
+    config:
+      tags: ["staging", "shp"]
+    tables:
+    - name: kota_bogor
+      description: Administrative area of Kota Bogor
+      meta:
+        external_location: "ST_Read('../../data/shp/kota/ADMINISTRASIDESA_AR_25K.shp')"
+      <<: *shpcols
+    - name: kab_bogor
+      description: Administrative area of Kabupaten Bogor
+      meta:
+        external_location: "ST_Read('../../data/shp/kab/ADMINISTRASIDESA_AR_25K.shp')"
+      <<: *shpcols
