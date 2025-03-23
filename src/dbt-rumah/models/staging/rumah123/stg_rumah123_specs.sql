@@ -1,5 +1,5 @@
 SELECT
-	specs.*,
-	id AS reference_id
+	id AS reference_id,
+	specs.*
 FROM
 	{{ source('raw_rumah123', 'houses') }}

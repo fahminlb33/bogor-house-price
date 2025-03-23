@@ -1,0 +1,145 @@
+version: 2
+
+analyses:
+  - name: facilities_by_house
+    description: Available facilities in the house
+    config:
+      tags: ["analyses", "rumah123"]
+    columns:
+      - name: reference_id
+        description: Reference to property listing ID
+      - name: facility_keamanan
+        description: Whether the house has security facilities (guards, CCTV, etc.)
+      - name: facility_ac
+        description: Whether the house has air conditioning
+      - name: facility_lapangan
+        description: Whether the house has a sports field
+      - name: facility_taman
+        description: Whether the house has a garden
+      - name: facility_laundry
+        description: Whether the house has a laundry room
+      - name: facility_masjid
+        description: Whether the house has a mosque
+      - name: facility_wastafel
+        description: Whether the house has a sink
+      - name: facility_one_gate_system
+        description: Whether the house has a one-gate system
+      - name: facility_dapur
+        description: Whether the house has a kitchen
+      - name: facility_jalur_telepon
+        description: Whether the house has a telephone line
+      - name: facility_kolam_renang
+        description: Whether the house has a swimming pool
+      - name: facility_playground
+        description: Whether the house has a playground
+      - name: facility_parkir
+        description: Whether the house has a parking area
+      - name: facility_gym
+        description: Whether the house has a gym
+      - name: facility_water_heater
+        description: Whether the house has a water heater
+      - name: facility_kolam_ikan
+        description: Whether the house has a fish pond
+      - name: facility_carport
+        description: Whether the house has a carport
+      - name: facility_air_pam
+        description: Whether the house has a water from the city water company
+      - name: facility_halaman
+        description: Whether the house has a yard
+      - name: facility_balcony
+        description: Whether the house has a balcony
+      - name: facility_internet
+        description: Whether the house has internet connectivity
+      - name: facility_air_tanah
+        description: Whether the house has a water from the ground
+      - name: facility_water_tank
+        description: Whether the house has a water tank
+      - name: facility_dishwasher
+        description: Whether the house has a dishwasher
+      - name: facility_garasi
+        description: Whether the house has a garage
+      - name: facility_aula
+        description: Whether the house has an aula
+      - name: facility_shed
+        description: Whether the house has a shed
+      - name: facility_canopy
+        description: Whether the house has a canopy
+      - name: facility_gas
+        description: Whether the house has a gas line
+      - name: facility_heating
+        description: Whether the house has a heating system
+      - name: facility_musholla
+        description: Whether the house has a musholla
+      - name: facility_floorboards
+        description: Whether the house has floorboards
+      - name: facility_mezzanine
+        description: Whether the house has a mezzanine
+      - name: facility_lemari_sepatu
+        description: Whether the house has a shoe rack
+      - name: facility_lemari_pakaian
+        description: Whether the house has a wardrobe
+
+  - name: floor_materials_by_house
+    description: Floor materials used in the house
+    config:
+      tags: ["analyses", "rumah123"]
+    columns:
+      - name: reference_id
+        description: Reference to property listing ID
+      - name: floor_mat_granit
+        description: Has granite floor in the house
+      - name: floor_mat_keramik
+        description: Has ceramic floor in the house
+      - name: floor_mat_ubin
+        description: Has ubin floor in the house
+      - name: floor_mat_marmer
+        description: Has marmer floor in the house
+      - name: floor_mat_vinyl
+        description: Has vinyl floor in the house
+
+  - name: house_materials_by_house
+    description: Materials used to build the house
+    config:
+      tags: ["analyses", "rumah123"]
+    columns:
+      - name: reference_id
+        description: Reference to property listing ID
+      - name: house_mat_bata_hebel
+        description: Has bata hebel material in the house
+      - name: house_mat_bata_merah
+        description: Has bata merah material in the house
+      - name: house_mat_beton
+        description: Has concrete material in the house
+      - name: house_mat_batako
+        description: Has batako material in the house
+
+  - name: tags_by_house
+    description: Extra information about the property in boolean form
+    config:
+      tags: ["analyses", "rumah123"]
+    columns:
+      - name: reference_id
+        description: Reference to property listing ID
+      - name: tag_bisa_nego
+        description: Whether the price is negotiable
+      - name: tag_cash_keras
+        description: Whether you can pay in cash
+      - name: tag_komplek
+        description: Whether the house is in a complex
+      - name: tag_perumahan
+        description: Whether the house is in a housing estate
+      - name: tag_kpr
+        description: Whether the house is eligible for a mortgage
+      - name: tag_one_gate_system
+        description: Whether the house is in a one-gate system
+      - name: tag_cash_bertahap
+        description: Whether you can pay in installments
+      - name: tag_dijual_cepat
+        description: Whether the house is for quick sale
+      - name: tag_pinggir_jalan
+        description: Whether the house is on the side of the road
+      - name: tag_pedesaan
+        description: Whether the house is in a rural area
+      - name: tag_masuk_gang
+        description: Whether the house is in a small alley
+

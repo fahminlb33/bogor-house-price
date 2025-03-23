@@ -1,8 +1,8 @@
 WITH
 house_agent AS (
 	SELECT
-        agent.*,
-        id as reference_id
+        id as reference_id,
+        agent.*
     FROM
         {{ source('raw_rumah123', 'houses') }}
 )

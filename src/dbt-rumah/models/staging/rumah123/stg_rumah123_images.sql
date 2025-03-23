@@ -1,5 +1,5 @@
 SELECT
-    unnest(images) AS photo_url,
-	id AS reference_id
+	id AS reference_id,
+    unnest(images) AS image_url
 FROM
     {{ source('raw_rumah123', 'houses') }}

@@ -1,7 +1,13 @@
 version: 2
 
 models:
-  - name: marts_houses_downstream
+  - name: marts_downstream_area_geometry
+    description: Administrative area polygon geometry
+    config:
+      tags: [llm, marts]
+    columns: []
+      
+  - name: marts_downstream_houses
     description: House specification, facilities, and tags for building LLM embeddings
     config:
       tags: [llm, marts]

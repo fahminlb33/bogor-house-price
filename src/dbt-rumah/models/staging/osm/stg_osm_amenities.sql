@@ -1,6 +1,6 @@
 SELECT
-    element, 
     id, 
+    element, 
     amenity, 
     name, 
     ST_Centroid(geom) as center,

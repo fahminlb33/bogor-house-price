@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: marts_bridge_house_facilities
+    description: Rumah123 house price average and median per city and district
+    config:
+      tags: ["marts", "dashboard", "fact"]
+    columns:
+      - name: district_sk
+        description: District surrogate key to join with district dimension
+      - name: price_avg
+        description: Average house price
+      - name: price_median
+        description: Median house price
+
+  - name: marts_bridge_house_tags
+    description: Rumah123 house price average and median per city and district
+    config:
+      tags: ["marts", "dashboard", "fact"]
+    columns:
+      - name: district_sk
+        description: District surrogate key to join with district dimension
+      - name: price_avg
+        description: Average house price
+      - name: price_median
+        description: Median house price
+
+  - name: marts_fact_houses
+    description: Rumah123 house price average and median per city and district
+    config:
+      tags: ["marts", "dashboard", "fact"]
+    columns:
+      - name: district_sk
+        description: District surrogate key to join with district dimension
+      - name: price_avg
+        description: Average house price
+      - name: price_median
+        description: Median house price

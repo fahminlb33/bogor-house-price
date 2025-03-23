@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: marts_fact_amenities
+    description: Rumah123 house price average and median per city and district
+    config:
+      tags: ["marts", "fact", "amenities"]
+    columns:
+      - name: amenity_sk
+        description: Amenity category surrogate key
+      - name: area_sk
+        description: Administrative area surrogate key
+      - name: name
+        description: Place name

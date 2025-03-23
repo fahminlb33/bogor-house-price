@@ -11,9 +11,9 @@ SELECT
     id,
     price,
     installment,
-    address_parts[1] AS district,
-    address_parts[2] AS city,
     description,
+    address_parts[1] AS subdistrict,
+    address_parts[2] AS city,
     url,
     last_modified::TIMESTAMP AS last_modified,
     scraped_at::TIMESTAMP AS scraped_at

@@ -1,12 +1,14 @@
+WITH
+house_materials AS (
+	SELECT
+        reference_id,
+        unnest(string_split(lower(material_bangunan), ',')) AS material
+    FROM
+        {{ ref('int_rumah123_specs') }}
+)
+
 SELECT
 	reference_id,
-	{{ dbt_utils.pivot(
-		'house_material',
-		dbt_utils.get_column_values(ref('int_rumah123_norm_house_materials'), 'house_material'),
-		prefix='house_mat_',
-		agg='max'
-	) }}
+    replace(trim(material), ' ', '_') AS house_material
 FROM
-	{{ ref('int_rumah123_norm_house_materials') }}
-GROUP BY
-	reference_id
+    house_materials

@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: marts_dim_amenities
+    description: Rumah123 district dimension
+    config:
+      tags: ["marts", "dashboard", "dimension"]
+    columns:
+      - name: amenity_sk
+        description: Amenity category surrogate key
+      - name: amenity_name
+        description: Amenity category
+
+  - name: marts_dim_area
+    description: Rumah123 district dimension
+    config:
+      tags: ["marts", "dashboard", "dimension"]
+    columns:
+      - name: area_sk
+        description: Administrative area surrogate key
+      - name: subdistrict
+        description: subdistrict name
+      - name: district
+        description: District name
+      - name: city
+        description: City name
+      - name: province
+        description: Province name
+      - name: latitude
+        description: Latitude coordinate in WG84 CRS
+      - name: longitude
+        description: Longitude coordinate in WG84 CRS
+
+  - name: marts_dim_facilities
+    description: Rumah123 district dimension
+    config:
+      tags: ["marts", "dashboard", "dimension"]
+    columns:
+      - name: facility_sk
+        description: Facility type surrogate key
+      - name: facility_name
+        description: Facility name
+
+  - name: marts_dim_tags
+    description: Rumah123 district dimension
+    config:
+      tags: ["marts", "dashboard", "dimension"]
+    columns:
+      - name: tag_sk
+        description: Tag surrogate key
+      - name: tag_name
+        description: Tag name

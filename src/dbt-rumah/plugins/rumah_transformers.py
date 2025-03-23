@@ -8,6 +8,11 @@ from rumah_constants import (
     COMPANY_NAME_INDEPENDENT,
 )
 
+def title_case(s: str) -> str:
+    if s is None:
+        return None
+    
+    return s.title()
 
 def mask_name(s: str) -> str:
     if s is None or len(s) < 1:
