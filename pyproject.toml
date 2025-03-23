@@ -1,7 +1,7 @@
 [project]
-name = "project-rumah-regresi"
+name = "bogor-house-price"
 version = "0.1.0"
-description = "Add your description here"
+description = "End-to-end data science project for predicting house prices in Bogor, Indonesia."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -25,6 +25,9 @@ dependencies = [
     "catboost>=1.2.7",
     "xgboost>=3.0.0",
     "ydf>=0.11.0",
+    "optuna>=4.2.1",
+    "mlflow>=2.21.0",
+    "shap>=0.47.1",
     # Nomic Embedding
     "torch>=2.6.0",
     "transformers>=4.49.0",
@@ -39,7 +42,5 @@ dependencies = [
     "seaborn>=0.13.2",
     "ruff>=0.10.0",
     "tqdm>=4.67.1",
-    "optuna>=4.2.1",
-    "mlflow>=2.21.0",
     "python-magic>=0.4.27",
 ]
