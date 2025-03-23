@@ -4,6 +4,8 @@ import argparse
 import tqdm
 import duckdb
 
+LOADED_EXTENSIONS = ["spatial"]
+
 
 def main(args):
     # create output dir
@@ -12,6 +14,11 @@ def main(args):
 
     # open duckdb
     with duckdb.connect(args.duckdb_path, read_only=False) as conn:
+        # load extensions
+        for ext in LOADED_EXTENSIONS:
+            conn.install_extension(ext)
+            conn.load_extension(ext)
+
         # connect postgres
         conn.execute(
             f"ATTACH '{args.pg_uri}' AS pg_db (TYPE postgres, SCHEMA 'public')"
@@ -22,7 +29,7 @@ def main(args):
         tables = conn.execute("SHOW TABLES").df()["name"].tolist()
         for table in (pbar := tqdm.tqdm(tables)):
             # only import marts (L3) tables
-            if not table.startswith("marts"):
+            if not table.startswith("marts") or "downstream" in table:
                 continue
 
             pbar.set_description(table)
@@ -32,9 +39,12 @@ def main(args):
             conn.execute(f"CREATE TABLE pg_db.{table} AS SELECT * FROM {table}")
 
         # load marts_houses_downstream to parquet
-        print("Load: L3 tables to parquet...")
+        print("Load: L3 tables to files...")
         conn.execute(
-            f"COPY marts_houses_downstream TO '{output_path / 'marts_houses_downstream.parquet'}'"
+            f"COPY marts_downstream_houses TO '{output_path / 'marts_downstream_houses.parquet'}'"
+        )
+        conn.execute(
+            f"COPY marts_downstream_area_geometry TO '{output_path / 'marts_downstream_area_geometry.geo.json'}' WITH (FORMAT gdal, DRIVER 'GeoJSON', LAYER_CREATION_OPTIONS 'WRITE_BBOX=YES')"
         )
 
 
