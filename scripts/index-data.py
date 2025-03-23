@@ -141,6 +141,47 @@ def mean_pooling(model_output, attention_mask):
     )
 
 
+def create_tables(conn: psycopg.Connection):
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS houses (
+                id              varchar(255)    not null,
+                parent_id       varchar(255)    null,
+                content         text            not null,
+                embedding       vector(768)     not null,
+                primary key (id),
+                constraint fk_house_linked foreign key (parent_id) references houses (id)
+            );
+            """
+        )
+
+        cur.execute(
+            """
+            CREATE INDEX IF NOT EXISTS ON public.houses USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
+            """
+        )
+
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS house_images (
+                id              varchar(255)    not null,
+                parent_id       varchar(255)    null,
+                file_path       text            not null,
+                embedding       vector(768)     not null,
+                primary key (id),
+                constraint fk_house foreign key (parent_id) references houses (id)
+            );
+            """
+        )
+
+        cur.execute(
+            """
+            CREATE INDEX IF NOT EXISTS ON public.house_images USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
+            """
+        )
+
+
 def index_text(conn: psycopg.Connection, args):
     # create prompt builder
     prompt_builder = DocumentPromptBuilder(args.template_path, args.template_name)
@@ -263,6 +304,9 @@ def index_image(conn: psycopg.Connection, args):
 def main(args):
     with psycopg.connect(args.database_uri, autocommit=True) as conn:
         register_vector(conn)
+
+        print("Create tables...")
+        create_tables(conn)
 
         print("Indexing text data...")
         index_text(conn, args)
