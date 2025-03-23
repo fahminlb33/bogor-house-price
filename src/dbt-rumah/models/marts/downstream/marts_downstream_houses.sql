@@ -47,8 +47,8 @@ images AS (
 staging AS (
 	SELECT
 		houses.id,
-    	houses.price,
-    	houses.installment,
+    	houses.price * 1000000 AS price,
+    	houses.installment * 1000000 AS installment,
 		houses.subdistrict,
 		houses.city,
 		houses.description,
