@@ -1,17 +1,15 @@
 import time
 import argparse
 
-import optuna
 import mlflow
+import optuna
+import optunahub
 
 import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.figure
 
-import ydf
-import xgboost as xgb
-import catboost as cb
 import lightgbm as lgb
 
 from sklearn.model_selection import KFold, train_test_split
@@ -21,6 +19,32 @@ from sklearn.metrics import (
     mean_absolute_percentage_error,
     r2_score,
 )
+
+FEATS_MONOTONE_UP = [
+    "luas_tanah",
+    "luas_bangunan",
+    "kamar_tidur",
+    "kamar_mandi",
+    "jumlah_lantai",
+]
+
+FEATS = [
+    "price",
+    "subdistrict",
+    "kamar_mandi",
+    "kamar_pembantu",
+    "luas_tanah",
+    "luas_bangunan",
+    "jumlah_lantai",
+    "tahun_dibangun",
+    "daya_listrik",
+    "sumber_air",
+    "land_building_ratio",
+    "total_beds",
+    "total_baths",
+    "building_area_floor_ratio",
+    "vehicle_accessibility",
+]
 
 
 def symmetric_mean_absolute_percentage_error(y_true, y_pred):
@@ -74,54 +98,38 @@ def evaluate_model(y_true, y_pred):
         "mean": np.mean(y_pred),
         "std": np.std(y_pred),
         "var": np.var(y_pred),
+        "r2": r2_score(y_true, y_pred),
         "mse": mean_squared_error(y_true, y_pred),
         "mae": mean_absolute_error(y_true, y_pred),
         "mape": mean_absolute_percentage_error(y_true, y_pred),
         "smape": symmetric_mean_absolute_percentage_error(y_true, y_pred),
-        "r2": r2_score(y_true, y_pred),
     }
 
 
 class OptunaObjective:
-    def __init__(self, algorithm: str, dataset_path: str):
-        self.algorithm = algorithm
+    def __init__(self, dataset_path: str, n_splits=5):
         self.dataset_path = dataset_path
+        self.n_splits = n_splits
 
     def load_data(self):
         # load dataset
-        df = pd.read_parquet(self.dataset_path)
-
-        # --- preprocessing
-        multichoice_cols = ["house_material", "floor_material", "tags", "facilities"]
-        drop_col = [
-            "id",
-            "installment",
-            "city",
-            "description",
-            "url",
-            "tipe_properti",
-            "main_image_url",
-            "hadap",
-        ] + multichoice_cols
-
-        # copy data
-        df_data = df.drop(columns=drop_col).copy()
-
-        # IQR-based outlier removal
-        q1 = df_data["price"].quantile(0.25)
-        q3 = df_data["price"].quantile(0.75)
-        iqr = q3 - q1
-
-        df_data = df_data[
-            (df_data["price"] > (q1 - 1.5 * iqr))
-            & (df_data["price"] < (q3 + 1.5 * iqr))
-        ]
-
-        # rooms-based outlier removal
-        df_data = df_data[df_data["kamar_tidur"] <= 5]
+        df_data = pd.read_parquet(self.dataset_path)
 
         # log-tranform price
         df_data["price"] = np.log(df_data["price"])
+
+        # derive new features
+        df_data["land_building_ratio"] = df_data["luas_tanah"] / df_data["luas_bangunan"]
+        df_data["total_beds"] = df_data["kamar_tidur"] + df_data["kamar_pembantu"]
+        df_data["total_baths"] = df_data["kamar_mandi"] + df_data["kamar_mandi_pembantu"]
+        df_data["bed_bath_ratio"] = df_data["kamar_tidur"] / df_data["kamar_mandi"]
+        df_data["total_bed_bath_ratio"] = df_data["total_beds"] / df_data["total_baths"]
+        df_data["rennovated_built_diff"] = df_data["tahun_di_renovasi"] - df_data["tahun_dibangun"]
+        df_data["building_area_floor_ratio"] = df_data["luas_bangunan"] / df_data["jumlah_lantai"]
+        df_data["vehicle_accessibility"] = df_data["garasi"] + df_data["carport"] / df_data["lebar_jalan"]
+
+        # feature selection
+        df_data = df_data[FEATS]
 
         # convert categorical columns
         cat_cols = df_data.select_dtypes("object").columns.tolist()
@@ -135,170 +143,64 @@ class OptunaObjective:
         self.train_df = train_df
         self.test_df = test_df
 
-    def generate_params(self, trial: optuna.Trial):
-        monotone_up = ["luas_tanah", "luas_bangunan"]
+        # create monotone constraint
+        self.monotone_constraints = [1 if x in FEATS_MONOTONE_UP else 0 for x in train_df.drop(columns=["price"]).columns]
 
-        input_features = self.train_df.columns.tolist()
-        input_features.remove("price")
-
-        if self.algorithm == "ydf":
-            # https://ydf.readthedocs.io/en/latest/tutorial/tuning/#local-tuning-with-manually-set-hyper-parameters
-            return {
-                # common hyperparameters
-                "num_trees": trial.suggest_int("num_trees", 100, 500),
-                "max_depth": trial.suggest_int("max_depth", 3, 10),
-                # specific hyperparameters
-                "subsample": trial.suggest_float("subsample", 0.1, 1.0),
-                "l1_regularization": trial.suggest_float("l1_regularization", 0, 100),
-                "l2_regularization": trial.suggest_float("l2_regularization", 0, 100),
-                # fixed hyperparameters
-                "random_seed": 123456,
-                "use_hessian_gain": True,
-                "include_all_columns": True,
-                "features": [
-                    ydf.Feature(x, ydf.Semantic.NUMERICAL, monotonic=1)
-                    for x in monotone_up
-                ],
-            }
-
-        if self.algorithm == "lightgbm":
-            # https://www.kaggle.com/code/mlisovyi/lightgbm-hyperparameter-optimisation-lb-0-761
-            # https://lightgbm.readthedocs.io/en/stable/Parameters-Tuning.html
-            return {
-                # common hyperparameters
-                "max_depth": trial.suggest_int("max_depth", 3, 10),
-                "num_iterations": trial.suggest_int("num_iterations", 100, 500),
-                "objective": trial.suggest_categorical(
-                    "objective", ["regression", "huber"]
-                ),
-                # specific hyperparameters
-                "reg_alpha": trial.suggest_float("reg_alpha", 0, 100),
-                "reg_lambda": trial.suggest_float("reg_lambda", 0, 100),
-                "num_leaves": trial.suggest_int("num_leaves", 6, 50),
-                "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1),
-                # fixed hyperparameters
-                "seed": 22,
-                "metric": "rmse",
-                "verbosity": -1,
-                "monotone_constraints": [
-                    1 if x in monotone_up else 0 for x in input_features
-                ],
-            }
-
-        if self.algorithm == "catboost":
-            # https://github.com/optuna/optuna-examples/blob/main/catboost/catboost_pruning.py
-            # https://github.com/optuna/optuna-examples/blob/main/catboost/catboost_simple.py
-            # https://github.com/catboost/tutorials/blob/master/hyperparameters_tuning/hyperparameters_tuning_using_optuna_and_hyperopt.ipynb
-            params = {
-                # common hyperparameters
-                "depth": trial.suggest_int("depth", 3, 10),
-                "iterations": trial.suggest_int("iterations", 100, 500),
-                "objective": trial.suggest_categorical("objective", ["RMSE", "Huber"]),
-                # specific hyperparameters
-                "boosting_type": trial.suggest_categorical(
-                    "boosting_type", ["Ordered", "Plain"]
-                ),
-                "bootstrap_type": trial.suggest_categorical(
-                    "bootstrap_type", ["Bayesian", "Bernoulli", "MVS"]
-                ),
-                "colsample_bylevel": trial.suggest_float(
-                    "colsample_bylevel", 0.01, 0.1, log=True
-                ),
-                # fixed hyperparameters
-                "verbose": 0,
-                "random_seed": 21,
-                "eval_metric": "RMSE",
-                "monotone_constraints": {k: 1 for k in monotone_up},
-            }
-
-            if params["bootstrap_type"] == "Bayesian":
-                params["bagging_temperature"] = trial.suggest_float(
-                    "bagging_temperature", 0, 10
-                )
-
-            elif params["bootstrap_type"] == "Bernoulli":
-                params["subsample"] = trial.suggest_float("subsample", 0.1, 1, log=True)
-
-            return params
-
-        if self.algorithm == "xgboost":
-            # https://www.kaggle.com/code/prashant111/a-guide-on-xgboost-hyperparameters-tuning#4.1-What-is-HYPEROPT-
-            return {
-                # common hyperparameters
-                "objective": "reg:squaredlogerror",
-                "max_depth": trial.suggest_int("max_depth", 3, 10),
-                "n_estimators": trial.suggest_int("n_estimators", 100, 1000),
-                # specific hyperparameters
-                "alpha": trial.suggest_float("alpha", 0, 40),
-                "gamma": trial.suggest_float("gamma", 1, 9),
-                "lambda": trial.suggest_float("lambda", 0, 1),
-                "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1),
-                # fixed hyperparameters
-                "eval_metric": "rmse",
-                "random_seed": 0,
-                "enable_categorical": True,
-                "monotone_constraints": {k: 1 for k in monotone_up},
-            }
-
-        raise ValueError("Invalid model name")
-
-    def train_model(self, params: dict, train_data: pd.DataFrame):
-        X_train, y_train = train_data.drop(columns=["price"]), train_data["price"]
-
-        if self.algorithm == "ydf":
-            return ydf.GradientBoostedTreesLearner(
-                label="price", task=ydf.Task.REGRESSION, **params
-            ).train(train_data)
-
-        if self.algorithm == "lightgbm":
-            train_ds = lgb.Dataset(X_train, y_train, categorical_feature=self.cat_cols)
-            return lgb.train(params, train_set=train_ds)
-
-        if self.algorithm == "catboost":
-            return cb.CatBoostRegressor(**params).fit(
-                X_train, y_train, cat_features=self.cat_cols
-            )
-
-        if self.algorithm == "xgboost":
-            return xgb.XGBRegressor(**params).fit(X_train, y_train)
-
-        raise ValueError("Invalid model name")
 
     def __call__(self, trial: optuna.Trial):
         with mlflow.start_run(run_name=f"trial-{trial.number}"):
             # create hyperparameters
-            params = self.generate_params(trial)
+            # https://www.kaggle.com/code/mlisovyi/lightgbm-hyperparameter-optimisation-lb-0-761
+            # https://lightgbm.readthedocs.io/en/stable/Parameters-Tuning.html
+            # https://lightgbm.readthedocs.io/en/latest/Parameters.html
+            params = {
+                # tunable hyperparameters
+                "max_depth": trial.suggest_int("max_depth", 3, 10),
+                "reg_alpha": trial.suggest_float("reg_alpha", 0, 100),
+                "reg_lambda": trial.suggest_float("reg_lambda", 0, 100),
+                "num_leaves": trial.suggest_int("num_leaves", 6, 50),
+                'learning_rate': trial.suggest_float('learning_rate', 0.001, 0.1, log=True),
+                "num_iterations": trial.suggest_int("num_iterations", 100, 500),
+                'min_data_in_leaf': trial.suggest_int('min_data_in_leaf', 10, 50),
+                "bagging_fraction": trial.suggest_float("bagging_fraction", 0.5, 1),
+                "feature_fraction": trial.suggest_float("feature_fraction", 0.5, 1),
+                "extra_trees": trial.suggest_categorical("extra_trees", [True, False]),
+                "objective": trial.suggest_categorical("objective", ["regression", "huber", "fair"]),
+                # fixed hyperparameters
+                "seed": 22,
+                "metric": "rmse",
+                "verbosity": -1,
+                "monotone_constraints": self.monotone_constraints
+            }
 
             # create scores
             val_scores = []
 
             # perform cross validation
-            cv = KFold(n_splits=10, shuffle=True, random_state=21)
-            for fold_i, (train_idx, test_idx) in enumerate(cv.split(self.train_df)):
-                print(f"{fold_i + 1}...", end="")
+            cv = KFold(n_splits=self.n_splits, shuffle=True, random_state=21)
+            for (train_idx, val_idx) in cv.split(self.train_df):
 
                 # split data
                 train_data = self.train_df.iloc[train_idx, :]
-                val_data = self.train_df.iloc[test_idx, :]
+                X_train, y_train = (
+                    train_data.drop(columns=["price"]),
+                    train_data["price"],
+                )
 
-                # create model
-                model = self.train_model(params, train_data)
+                # fit model
+                model = lgb.LGBMRegressor(**params)
+                model.fit(X_train, y_train, categorical_feature=self.cat_cols)
 
                 # run prediction
-                X_val, y_val = (
-                    val_data.drop(columns=["price"]),
-                    np.exp(val_data["price"]),
-                )
-                y_val_pred = np.exp(model.predict(X_val))
+                val_data = self.train_df.iloc[val_idx, :]
+                X_val, y_val = val_data.drop(columns=["price"]), val_data["price"]
+
+                y_val_pred = model.predict(X_val)
 
                 # collect metrics
                 val_scores.append(evaluate_model(y_val, y_val_pred))
 
-            print("")
-
             # log params
-            if "features" in params:
-                params.pop("features")
             if "monotone_constraints" in params:
                 params.pop("monotone_constraints")
 
@@ -311,11 +213,8 @@ class OptunaObjective:
                 )
 
             # run prediction on test data
-            X_test, y_test = (
-                self.test_df.drop(columns=["price"]),
-                np.exp(self.test_df["price"]),
-            )
-            y_test_pred = np.exp(model.predict(X_test))
+            X_test, y_test = self.test_df.drop(columns=["price"]), self.test_df["price"]
+            y_test_pred = model.predict(X_test)
 
             test_score = evaluate_model(y_test, y_test_pred)
 
@@ -324,9 +223,7 @@ class OptunaObjective:
                 mlflow.log_metric(f"test_{k}", v)
 
             mlflow.log_figure(plot_predictions(y_test, y_test_pred), "predictions.png")
-            mlflow.log_figure(
-                plot_distributions(y_test, y_test_pred), "distributions.png"
-            )
+            mlflow.log_figure(plot_distributions(y_test, y_test_pred), "distributions.png")
 
             return np.mean([score["mse"] for score in val_scores])
 
@@ -336,19 +233,29 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
+        "--experiment-name", 
+        type=str, 
+        required=True, 
+        help="MLflow experiment name"
+    )
+    parser.add_argument(
         "--dataset",
+        type=str,
         help="Input dataset from L3",
-        default="../data/curated/marts_houses_downstream.parquet",
+        default="../data/curated/marts_downstream_houses.parquet",
     )
     parser.add_argument(
-        "--algorithm",
-        help="Algorithm to tune",
-        choices=["ydf", "lightgbm", "catboost", "xgboost"],
+        "--tracking-url", 
+        type=str, 
+        help="MLflow tracking server URL",
+        default="http://10.20.20.102:8009/",
     )
     parser.add_argument(
-        "--experiment-name", required=True, help="MLflow experiment name"
+        "--n-trials", 
+        type=int, 
+        help="Number of tuning iterations", 
+        default=100
     )
-    parser.add_argument("--tracking-url", help="MLflow tracking server URL")
 
     args = parser.parse_args()
 
@@ -356,11 +263,10 @@ if __name__ == "__main__":
     matplotlib.use("Agg")
 
     # set mlflow tracking server
-    if args.tracking_url:
-        mlflow.set_tracking_uri(args.tracking_url)
+    mlflow.set_tracking_uri(args.tracking_url)
 
     # create objective
-    objective = OptunaObjective(args.algorithm, args.dataset)
+    objective = OptunaObjective(args.dataset)
 
     # load dataset
     objective.load_data()
@@ -369,11 +275,16 @@ if __name__ == "__main__":
     experiment_id = get_or_create_experiment(args.experiment_name)
     mlflow.set_experiment(experiment_id=experiment_id)
 
+    # get sampler
+    sampler = optunahub.load_module("samplers/auto_sampler").AutoSampler()
+
     # create study
     study = optuna.create_study(
-        direction="minimize",
-        study_name=args.algorithm,
+        sampler=sampler,
         storage="sqlite:///bogor_houses_v3.db",
+        direction="minimize",
+        study_name=args.experiment_name,
         load_if_exists=True,
     )
+
     study.optimize(objective, n_trials=100)
