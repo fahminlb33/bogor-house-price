@@ -88,7 +88,8 @@ staging AS (
 		facilities.facilities,
 		house_materials.house_materials,
 		floor_materials.floor_materials,
-		images.image_urls
+		images.image_urls,
+		amenities.amenities
 	FROM
 		{{ ref('int_rumah123_houses') }} houses
 	LEFT JOIN
@@ -103,6 +104,10 @@ staging AS (
 		floor_materials ON floor_materials.reference_id = houses.id
 	LEFT JOIN
 		images ON images.reference_id = houses.id
+	LEFT JOIN 
+		-- subdistrict is not unique!
+		-- some mismatch is expected
+		{{ ref('int_osm_amenities_area_counts')}} amenities ON houses.subdistrict = amenities.subdistrict
 )
 
 SELECT
