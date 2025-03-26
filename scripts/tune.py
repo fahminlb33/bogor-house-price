@@ -119,14 +119,24 @@ class OptunaObjective:
         df_data["price"] = np.log(df_data["price"])
 
         # derive new features
-        df_data["land_building_ratio"] = df_data["luas_tanah"] / df_data["luas_bangunan"]
         df_data["total_beds"] = df_data["kamar_tidur"] + df_data["kamar_pembantu"]
-        df_data["total_baths"] = df_data["kamar_mandi"] + df_data["kamar_mandi_pembantu"]
+        df_data["total_baths"] = (
+            df_data["kamar_mandi"] + df_data["kamar_mandi_pembantu"]
+        )
+        df_data["land_building_ratio"] = (
+            df_data["luas_tanah"] / df_data["luas_bangunan"]
+        )
         df_data["bed_bath_ratio"] = df_data["kamar_tidur"] / df_data["kamar_mandi"]
         df_data["total_bed_bath_ratio"] = df_data["total_beds"] / df_data["total_baths"]
-        df_data["rennovated_built_diff"] = df_data["tahun_di_renovasi"] - df_data["tahun_dibangun"]
-        df_data["building_area_floor_ratio"] = df_data["luas_bangunan"] / df_data["jumlah_lantai"]
-        df_data["vehicle_accessibility"] = df_data["garasi"] + df_data["carport"] / df_data["lebar_jalan"]
+        df_data["rennovated_built_diff"] = (
+            df_data["tahun_di_renovasi"] - df_data["tahun_dibangun"]
+        )
+        df_data["building_area_floor_ratio"] = (
+            df_data["luas_bangunan"] / df_data["jumlah_lantai"]
+        )
+        df_data["vehicle_accessibility"] = (
+            df_data["garasi"] + df_data["carport"] / df_data["lebar_jalan"]
+        )
 
         # feature selection
         df_data = df_data[FEATS]
@@ -144,8 +154,10 @@ class OptunaObjective:
         self.test_df = test_df
 
         # create monotone constraint
-        self.monotone_constraints = [1 if x in FEATS_MONOTONE_UP else 0 for x in train_df.drop(columns=["price"]).columns]
-
+        self.monotone_constraints = [
+            1 if x in FEATS_MONOTONE_UP else 0
+            for x in train_df.drop(columns=["price"]).columns
+        ]
 
     def __call__(self, trial: optuna.Trial):
         with mlflow.start_run(run_name=f"trial-{trial.number}"):
@@ -159,18 +171,22 @@ class OptunaObjective:
                 "reg_alpha": trial.suggest_float("reg_alpha", 0, 100),
                 "reg_lambda": trial.suggest_float("reg_lambda", 0, 100),
                 "num_leaves": trial.suggest_int("num_leaves", 6, 50),
-                'learning_rate': trial.suggest_float('learning_rate', 0.001, 0.1, log=True),
+                "learning_rate": trial.suggest_float(
+                    "learning_rate", 0.001, 0.1, log=True
+                ),
                 "num_iterations": trial.suggest_int("num_iterations", 100, 500),
-                'min_data_in_leaf': trial.suggest_int('min_data_in_leaf', 10, 50),
+                "min_data_in_leaf": trial.suggest_int("min_data_in_leaf", 10, 50),
                 "bagging_fraction": trial.suggest_float("bagging_fraction", 0.5, 1),
                 "feature_fraction": trial.suggest_float("feature_fraction", 0.5, 1),
                 "extra_trees": trial.suggest_categorical("extra_trees", [True, False]),
-                "objective": trial.suggest_categorical("objective", ["regression", "huber", "fair"]),
+                "objective": trial.suggest_categorical(
+                    "objective", ["regression", "huber", "fair"]
+                ),
                 # fixed hyperparameters
                 "seed": 22,
                 "metric": "rmse",
                 "verbosity": -1,
-                "monotone_constraints": self.monotone_constraints
+                "monotone_constraints": self.monotone_constraints,
             }
 
             # create scores
@@ -178,8 +194,7 @@ class OptunaObjective:
 
             # perform cross validation
             cv = KFold(n_splits=self.n_splits, shuffle=True, random_state=21)
-            for (train_idx, val_idx) in cv.split(self.train_df):
-
+            for train_idx, val_idx in cv.split(self.train_df):
                 # split data
                 train_data = self.train_df.iloc[train_idx, :]
                 X_train, y_train = (
@@ -223,7 +238,9 @@ class OptunaObjective:
                 mlflow.log_metric(f"test_{k}", v)
 
             mlflow.log_figure(plot_predictions(y_test, y_test_pred), "predictions.png")
-            mlflow.log_figure(plot_distributions(y_test, y_test_pred), "distributions.png")
+            mlflow.log_figure(
+                plot_distributions(y_test, y_test_pred), "distributions.png"
+            )
 
             return np.mean([score["mse"] for score in val_scores])
 
@@ -233,10 +250,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--experiment-name", 
-        type=str, 
-        required=True, 
-        help="MLflow experiment name"
+        "--experiment-name", type=str, required=True, help="MLflow experiment name"
     )
     parser.add_argument(
         "--dataset",
@@ -245,16 +259,13 @@ if __name__ == "__main__":
         default="../data/curated/marts_downstream_houses.parquet",
     )
     parser.add_argument(
-        "--tracking-url", 
-        type=str, 
+        "--tracking-url",
+        type=str,
         help="MLflow tracking server URL",
         default="http://10.20.20.102:8009/",
     )
     parser.add_argument(
-        "--n-trials", 
-        type=int, 
-        help="Number of tuning iterations", 
-        default=100
+        "--n-trials", type=int, help="Number of tuning iterations", default=100
     )
 
     args = parser.parse_args()

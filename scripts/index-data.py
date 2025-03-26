@@ -285,7 +285,7 @@ def index_image(conn: psycopg.Connection, args):
                 # encode image
                 img_emb = vision_model(**inputs).last_hidden_state
                 img_embeddings = F.normalize(img_emb[:, 0], p=2, dim=1)
-                embeddings_list = img_embeddings.cpu().detach().numpy()[0].tolist()
+                embeddings_list = img_embeddings.detach().cpu().numpy()[0].tolist()
 
                 # save to DB
                 cur.execute(
