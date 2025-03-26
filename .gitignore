@@ -175,6 +175,7 @@ ml_models/
 # credentials
 CREDENTIALS
 .docker
+**/.streamlit/secrets.toml
 
 # temp dir
 tmp/

@@ -2,7 +2,7 @@ install:
 	pip install -r requirements.txt
 
 format:
-	ruff format scripts/
+	ruff format scripts/ src/streamlit-rumah/
 
 scrape:
 	cd scraper && \
