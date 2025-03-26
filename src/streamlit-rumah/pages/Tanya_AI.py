@@ -1,67 +1,67 @@
+from uuid import uuid4
+from random import choice
+from pathlib import Path
 from dataclasses import dataclass
 
 import streamlit as st
-import extra_streamlit_components as stx
 
-from utils.db import track_prompt
-from utils.cookies import ensure_user_has_session, get_session_id
-from utils.llm import query, get_rag_pipeline, get_document_store, QueryDocument
+from google import genai
+from google.genai import types
+
+from utils.llm import (
+    SYSTEM_INSTRUCTION,
+    top_listing_by_location,
+    search_by_keyword,
+    search_by_image_id,
+    get_house_images,
+    get_available_subdistricts,
+    predict_house_price,
+)
 
 
 @dataclass
 class ChatRecord:
     role: str
     content: str
-    results: list[QueryDocument]
+    image_path: str
 
 
 MAX_MESSAGE_LENGTH = 500
 
 
-@st.cache_resource()
-def load_css():
-    with open("assets/style.css") as f:
-        return f.read()
+def generate_response(text: str) -> ChatRecord:
+    # send message
+    response = st.session_state.chat.send_message(text)
+
+    # check if we're responding with images
+    for history in response.automatic_function_calling_history:
+        for part in history.parts:
+            if part.function_response is None:
+                continue
+
+            func_resp = part.function_response
+            if func_resp.name == "get_house_images":
+                image_paths = func_resp.response["result"]
+                if len(image_paths) == 0:
+                    return ChatRecord("assistant", response.text, image_path=None)
+
+                return ChatRecord(
+                    "assistant",
+                    "Here are a sample image for the property",
+                    image_path=choice(image_paths),
+                )
+
+    return ChatRecord("assistant", response.text, image_path=None)
 
 
 def render_chat(message: ChatRecord):
     with st.chat_message(message.role):
-        # if the LLM responded with no data, dont' render
-        content_lower = message.content.lower()
-        if "no_res" in content_lower or "tidak ada hasil" in content_lower:
-            st.markdown(
-                "Tidak ada hasil yang cocok dengan pencarian Anda. Silakan coba lagi."
-            )
-            return
-
         # render content
         st.markdown(message.content)
 
         # render results
-        if len(message.results) > 0:
-            # create columns with a maximum of 5 results per column
-            # if there are more than 5 results, the columns will be created in a new row
-            for i, result in enumerate(message.results):
-                # create a new row of columns every 5 results
-                if i % 5 == 0:
-                    cols = st.columns(5)
-
-                # format price
-                with cols[i % 5]:
-                    # display image, if available
-                    if result.main_image_url:
-                        st.image(result.main_image_url)
-
-                    # display price and link
-                    price = (
-                        f"Rp{result.price:,.0f}jt"
-                        if result.price < 1000
-                        else f"Rp{(result.price / 1000):,.0f}m"
-                    )
-                    st.markdown(
-                        f'<div class="text-caption">{price}<br><a href="{result.url}">{result.district}, {result.city}</a></div>',
-                        unsafe_allow_html=True,
-                    )
+        if message.image_path is not None:
+            st.image(Path(st.secrets["IMAGE_ROOT"]) / message.image_path)
 
 
 def main():
@@ -74,21 +74,17 @@ def main():
         page_icon="👋",
     )
 
-    # to prevent http referer
-    st.markdown("<meta name='referrer' content='no-referrer'>", unsafe_allow_html=True)
-
-    # set cookie manager
-    cookie_manager = stx.CookieManager()
-    ensure_user_has_session(cookie_manager)
-
-    # load custom styles
-    st.markdown(f"<style>{load_css()}</style>", unsafe_allow_html=True)
+    st.sidebar.markdown(
+        """
+        Chat dilakukan menggunakan Gemini 2.0 Flash dan tool calling.
+        
+        Source code: [klik disini.](https://github.com/fahminlb33/bogor-house-price/blob/master/src/streamlit-rumah/pages/Tanya_AI.py)
+        """
+    )
 
     #
     # Page contents
     #
-
-    st.title("Tanya AI")
 
     # display chat messages from history on app rerun
     for message in st.session_state.messages:
@@ -101,14 +97,12 @@ def main():
 
         # add user message to chat history
         st.session_state.messages.append(
-            ChatRecord(role="user", content=prompt, results=[])
+            ChatRecord(role="user", content=prompt, image_path=None)
         )
 
         # check if prompt is too long
         if len(prompt) > MAX_MESSAGE_LENGTH:
-            response = (
-                "Pertanyaan terlalu panjang, maksimal 500 karakter. Silakan coba lagi."
-            )
+            response = "Pertanyaan terlalu panjang, maksimal 500 karakter."
             st.session_state.messages.append(
                 ChatRecord(role="assistant", content=response, results=[])
             )
@@ -120,40 +114,37 @@ def main():
 
         # query to LLM
         with st.spinner("Sedang berpikir..."):
-            # get pipeline and document store
-            doc_store = get_document_store()
-            pipeline = get_rag_pipeline(doc_store)
-
             # query and parse LLM response
-            response = query(pipeline, prompt)
-
-            # check if we get a valid response
-            if not response.success:
-                chat_record = ChatRecord(
-                    role="assistant",
-                    content="Maaf, saya tidak mengerti. Silakan coba lagi.",
-                )
-            else:
-                chat_record = ChatRecord(
-                    role="assistant",
-                    content=response.content,
-                    results=response.documents,
-                )
+            response = generate_response(prompt)
 
             # display assistant response in chat message container
-            render_chat(chat_record)
+            render_chat(response)
 
             # add assistant response to chat history
-            st.session_state.messages.append(chat_record)
-
-            # track prompt
-            track_prompt(get_session_id(cookie_manager), prompt, response.raw)
+            st.session_state.messages.append(response)
 
 
 if __name__ == "__main__":
-    # initialize chat history
-    if "messages" not in st.session_state:
+    # init states
+    if "initialized" not in st.session_state or not st.session_state.initialized:
+        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+        config = types.GenerateContentConfig(
+            system_instruction=SYSTEM_INSTRUCTION,
+            tools=[
+                top_listing_by_location,
+                search_by_keyword,
+                search_by_image_id,
+                get_house_images,
+                get_available_subdistricts,
+                predict_house_price,
+            ],
+        )
+
+        st.session_state.initialized = True
         st.session_state.messages = []
+        st.session_state.chat = client.chats.create(
+            model=st.secrets["GEMINI_MODEL"], config=config
+        )
 
     # bootstrap
     main()

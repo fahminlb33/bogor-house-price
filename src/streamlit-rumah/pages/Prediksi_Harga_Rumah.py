@@ -1,22 +1,10 @@
 import streamlit as st
-import extra_streamlit_components as stx
 
-from utils.db import track_prediction
-from utils.data_loaders import format_price_long
-from utils.cookies import ensure_user_has_session, get_session_id
-from utils.regression import (
-    AVAILABLE_FACILITIES,
-    AVAILABLE_HOUSE_MATERIAL,
-    AVAILABLE_TAGS,
-    construct_features,
-    load_model,
+from utils.helpers import format_price_long
+from utils.price_predictor import (
+    get_subdistricts,
+    predict_price,
 )
-
-
-@st.cache_resource()
-def load_css():
-    with open("assets/style.css") as f:
-        return f.read()
 
 
 def main():
@@ -30,12 +18,33 @@ def main():
         page_icon="👋",
     )
 
-    # set cookie manager
-    cookie_manager = stx.CookieManager()
-    ensure_user_has_session(cookie_manager)
+    st.sidebar.markdown(
+        """
+        Prediksi dilakukan menggunakan model LightGBM.
+        
+        Source code: [klik disini.](https://github.com/fahminlb33/bogor-house-price/blob/master/notebooks/train-eval.ipynb)
+        """
+    )
 
     # load custom styles
-    st.markdown(f"<style>{load_css()}</style>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <style>
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-atas {
+            margin-top: 40px;
+        }
+
+        .text-prediction {
+            font-size: 5rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
     #
     # Page contents
@@ -46,42 +55,26 @@ def main():
                 Selamat datang ke layanan prediksi harga rumah! Masukkan informasi spesifikasi rumah yang ingin Anda beli pada form berikut.
                 """)
 
-    #
-    # Input features
-    #
+    # input features
 
     input_features = {}
     with st.form("predict_form", border=False):
         st.subheader("Spesifikasi Rumah")
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
         with col1:
             input_features["luas_tanah"] = st.number_input("Luas tanah", step=1)
-            input_features["luas_bangunan"] = st.number_input("Luas bangunan", step=1)
+            input_features["kamar_tidur"] = st.number_input("Kamar tidur", step=1)
             input_features["daya_listrik"] = st.number_input("Daya listrik", step=1)
             input_features["jumlah_lantai"] = st.number_input("Jumlah lantai", step=1)
 
         with col2:
+            input_features["luas_bangunan"] = st.number_input("Luas bangunan", step=1)
             input_features["kamar_mandi"] = st.number_input("Kamar mandi", step=1)
-            input_features["kamar_tidur"] = st.number_input("Kamar tidur", step=1)
-            input_features["kamar_pembantu"] = st.number_input("Kamar pembantu", step=1)
-            input_features["kamar_mandi_pembantu"] = st.number_input(
-                "Kamar mandi pembantu", step=1
+            input_features["tahun_dibangun"] = st.number_input("Tahun Dibangun", step=1)
+            input_features["subdistrict"] = st.selectbox(
+                "Kelurahan", get_subdistricts()
             )
-
-        with col3:
-            input_features["dapur"] = st.number_input("Dapur", step=1)
-            input_features["lebar_jalan"] = st.number_input(
-                "Lebar jalan (mobil)", step=1
-            )
-            input_features["carport"] = st.number_input("Carport", step=1)
-
-        st.subheader("Fasilitas dan Lainnya")
-        input_features["fasilitas"] = st.multiselect("Fasilitas", AVAILABLE_FACILITIES)
-        input_features["house_material"] = st.multiselect(
-            "Material Bangunan", AVAILABLE_HOUSE_MATERIAL
-        )
-        input_features["tags"] = st.multiselect("Tags", AVAILABLE_TAGS)
 
         st.text("")
         submit_res = st.form_submit_button(
@@ -92,31 +85,37 @@ def main():
     # Prediction output
     #
 
-    st.info(
-        "Ingat, model ini memiliki nilai *Mean Absolute Error* (MAE) sebesar ~Rp279jt",
-        icon="💸",
-    )
-
     if submit_res:
-        # load model
-        model = load_model()
-
         # construct features
-        X_pred = construct_features(input_features)
+        X_pred = {
+            "subdistrict": [input_features["subdistrict"]],
+            "luas_tanah": [input_features["luas_tanah"]],
+            "luas_bangunan": [input_features["luas_bangunan"]],
+            "jumlah_lantai": [input_features["jumlah_lantai"]],
+            "tahun_dibangun": [input_features["tahun_dibangun"]],
+            "daya_listrik": [input_features["daya_listrik"]],
+            "land_building_ratio": [
+                input_features["luas_tanah"] / max(input_features["luas_bangunan"], 1)
+            ],
+            "total_bedrooms": [input_features["kamar_tidur"]],
+            "total_bathrooms": [input_features["kamar_mandi"]],
+            "building_area_floor_ratio": [
+                input_features["luas_bangunan"]
+                / max(input_features["jumlah_lantai"], 1)
+            ],
+        }
 
         # predict
-        y_pred = model.predict(X_pred)
-        price = format_price_long(y_pred[0] * 1_000_000)
+        price = format_price_long(predict_price(X_pred))
 
         # show prediction
-        st.markdown('<div class="text-center">Hasil Prediksi', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="text-center mt-atas">Hasil Prediksi', unsafe_allow_html=True
+        )
         st.markdown(
             f'<div class="text-center text-prediction">{price}</div>',
             unsafe_allow_html=True,
         )
-
-        # track prediction
-        track_prediction(get_session_id(cookie_manager), input_features, y_pred[0])
 
 
 if __name__ == "__main__":

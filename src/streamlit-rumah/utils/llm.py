@@ -1,215 +1,147 @@
-from dataclasses import dataclass
+from pathlib import Path
+from textwrap import dedent
+from dataclasses import asdict
 
-import streamlit as st
-
-from haystack import Pipeline
-from haystack.components.routers import ConditionalRouter
-from haystack.components.embedders import OpenAITextEmbedder
-from haystack.components.generators import OpenAIGenerator
-from haystack.components.builders.prompt_builder import PromptBuilder
-from haystack_integrations.document_stores.qdrant import QdrantDocumentStore
-from haystack_integrations.components.retrievers.qdrant import QdrantEmbeddingRetriever
-
-from utils.config import get_settings
-from utils.llm_prompts import (
-    PROMPT_FOR_ROUTER,
-    PROMPT_FOR_PREDICTION_EXTRACTION,
-    PROMPT_FOR_PREDICTION_RESULT,
-    PROMPT_FOR_RAG,
+from utils.embeddings import embed_image, embed_text
+from utils.price_predictor import get_subdistricts, predict_price
+from utils.db import (
+    query_locations,
+    query_hybrid,
+    query_image,
+    query_houses,
+    query_house_images,
 )
-from utils.llm_components import PredictHousePrice, ReturnDocumentsFromRetriever
-from google import genai
-
-@dataclass
-class QueryDocument:
-    id: str
-    city: str
-    district: str
-    price: float
-    url: str
-    main_image_url: str
 
 
-@dataclass
-class QueryResult:
-    success: bool
-    content: str
-    documents: list[QueryDocument]
-    raw: dict
+SYSTEM_INSTRUCTION = dedent(
+    """
+    Kamu adalah sales rumah yang baik.
+    Selalu gunakan Bahasa Indonesia dalam percakapan.
+    """
+)
 
 
-AGENT_ROUTER = [
-    {
-        "condition": "{{'PREDICTION' in replies[0]}}",
-        "output": "{{query}}",
-        "output_name": "features",
-        "output_type": str,
-    },
-    {
-        "condition": "{{'PREDICTION' not in replies[0]}}",
-        "output": "{{query}}",
-        "output_name": "question",
-        "output_type": str,
-    },
-]
+def top_listing_by_location() -> list[dict[str, str | int | float]]:
+    """List locations with the most available house sales listing along with its average price.
+
+    Returns:
+        A list of dictionary containing the area subdistrict, district, city and province, along with the number of house for sale and its average price
+    """
+
+    locations = query_locations()
+    return [asdict(x) for x in locations]
 
 
-@st.cache_resource(show_spinner=False)
-def get_document_store() -> QdrantDocumentStore:
-    # get settings
-    settings = get_settings()
+def search_by_keyword(query: str, image_mandatory: bool) -> list[dict[str, str]]:
+    """Search house sale listing using a search query.
 
-    # create document store
-    hnsw_config = dict(m=settings.qdrant_hnsw_m, ef_construct=settings.qdrant_hnsw_ef)
-    return QdrantDocumentStore(
-        host=settings.qdrant_host,
-        port=settings.qdrant_port,
-        grpc_port=settings.qdrant_grpc_port,
-        prefer_grpc=True,
-        index=settings.qdrant_index,
-        embedding_dim=settings.qdrant_embedding_dim,
-        hnsw_config=hnsw_config,
-        return_embedding=True,
-        wait_result_from_api=True,
+    Args:
+        query: Search query describing the house information including price, location, number of bedrooms, etc.
+        image_mandatory: Whether to return properties with an image. Defaults to False.
+
+    Returns:
+        A list of dictionary containing a unique house ID and detailed house description.
+    """
+
+    text_embedding = embed_text(query)
+    retrieved_documents = query_hybrid(query, text_embedding, image_mandatory)
+    documents = query_houses(
+        [x.id for x in retrieved_documents]
+        + [x.parent_id for x in retrieved_documents if x.parent_id is not None]
     )
 
-
-@st.cache_resource(show_spinner=False)
-def get_rag_pipeline(_document_store: QdrantDocumentStore) -> Pipeline:
-    # get settings
-    settings = get_settings()
-
-    # router
-    router = ConditionalRouter(AGENT_ROUTER)
-    router_prompt = PromptBuilder(PROMPT_FOR_ROUTER)
-    router_llm = OpenAIGenerator(model=settings.openai_chat_model)
-
-    # extraction of input features
-    prediction_prompt = PromptBuilder(PROMPT_FOR_PREDICTION_EXTRACTION)
-    prediction_llm = OpenAIGenerator(
-        model=settings.openai_chat_model,
-        generation_kwargs={"response_format": {"type": "json_object"}},
-    )
-    prediction_component = PredictHousePrice()
-
-    # prediction result
-    prediction_result_prompt = PromptBuilder(PROMPT_FOR_PREDICTION_RESULT)
-    prediction_result_llm = OpenAIGenerator(model=settings.openai_chat_model)
-
-    # RAG
-    rag_embedder = OpenAITextEmbedder(model=settings.openai_embedding_model)
-    rag_retriever = QdrantEmbeddingRetriever(document_store=_document_store)
-    rag_prompt = PromptBuilder(template=PROMPT_FOR_RAG)
-    rag_llm = OpenAIGenerator(model=settings.openai_chat_model)
-    rag_doc_returner = ReturnDocumentsFromRetriever()
-
-    # create pipeline
-    pipeline = Pipeline()
-
-    # router phase
-    pipeline.add_component("router_prompt", router_prompt)
-    pipeline.add_component("router_llm", router_llm)
-    pipeline.add_component("router", router)
-
-    # if the route is PREDICTION
-    pipeline.add_component("prediction_prompt", prediction_prompt)
-    pipeline.add_component("prediction_llm", prediction_llm)
-    pipeline.add_component("prediction_component", prediction_component)
-    pipeline.add_component("prediction_prompt_for_result", prediction_result_prompt)
-    pipeline.add_component("prediction_result_llm", prediction_result_llm)
-
-    # if the route is DATABASE_SEARCH
-    pipeline.add_component("rag_embedder", rag_embedder)
-    pipeline.add_component("rag_retriever", rag_retriever)
-    pipeline.add_component("rag_prompt", rag_prompt)
-    pipeline.add_component("rag_llm", rag_llm)
-    pipeline.add_component("rag_doc_returner", rag_doc_returner)
-
-    # connect the components
-    pipeline.connect("router_prompt", "router_llm")
-    pipeline.connect("router_llm.replies", "router.replies")
-
-    pipeline.connect("router.features", "prediction_prompt")
-    pipeline.connect("prediction_prompt", "prediction_llm")
-    pipeline.connect("prediction_llm", "prediction_component")
-    pipeline.connect(
-        "prediction_component.prediction", "prediction_prompt_for_result.prediction"
-    )
-    pipeline.connect(
-        "prediction_component.features", "prediction_prompt_for_result.features"
-    )
-    pipeline.connect("prediction_prompt_for_result", "prediction_result_llm")
-
-    pipeline.connect("router.question", "rag_embedder.text")
-    pipeline.connect("router.question", "rag_prompt.question")
-    pipeline.connect("rag_embedder.embedding", "rag_retriever.query_embedding")
-    pipeline.connect("rag_retriever", "rag_prompt.documents")
-    pipeline.connect("rag_retriever", "rag_doc_returner")
-    pipeline.connect("rag_prompt", "rag_llm")
-
-    return pipeline
+    return [asdict(x) for x in documents]
 
 
-def query(_pipeline: Pipeline, question: str) -> QueryResult:
-    # get settings
-    settings = get_settings()
+def search_by_image_id(image_id: str) -> list[dict[str, str]]:
+    """Search house sale listing using an image.
 
-    client = genai.Client(api_key="YOUR_API_KEY")
-    response = client.models.generate_content(
-        model="gemini-2.0-flash", contents="Explain how AI works"
-    )
-    print(response.text)
+    Args:
+        image_id: Unique ID supplied by the user after it is uploaded to the system.
 
-    # run the pipeline
-    result = _pipeline.run(
+    Returns:
+        A list of dictionary containing a unique house ID and detailed house description.
+    """
+
+    image_path = Path("../data/rumah123/images") / image_id
+    if not image_path.exists():
+        raise ValueError("Image not found")
+
+    with open(image_path, "rb") as f:
+        image_embedding = embed_image(f.read())
+
+    retrieved_documents = query_image(image_embedding)
+    documents = query_houses([x.parent_id for x in retrieved_documents])
+
+    return [asdict(x) for x in documents]
+
+
+def get_house_images(house_id: str) -> list[str]:
+    """Gets the image paths associated with the specified house ID.
+
+    Args:
+        house_id: Unique house ID that must starts with "hos".
+
+    Returns:
+        A list of file paths to the images.
+    """
+
+    if not house_id.startswith("hos"):
+        raise ValueError("House ID must start with hos")
+
+    norm_id = house_id.replace("-desc", "")
+    retrieved_documents = query_house_images(norm_id)
+
+    return retrieved_documents
+
+
+def get_available_subdistricts() -> list[str]:
+    """Lists the available subdistrict locations of the house listings. Used for searching for sale properties and predicting property prices.
+
+    Returns:
+        A list of subdistrict names.
+    """
+
+    return get_subdistricts()
+
+
+def predict_house_price(
+    subdistrict: str,
+    land_area: float,
+    building_area: float,
+    num_bedrooms: int,
+    num_bathrooms: int,
+    num_floors: int,
+    year_built: int,
+    electricity_rate: float,
+) -> float:
+    """Predicts a house price based on its features.
+
+    Args:
+        subdistrict: Subdistrict name of the property. This is a required field.
+        land_area: Estimated land area of the property in meters squared. This is a required field.
+        building_area: Estimated building area on top of the land in meters squared. This is a required field.
+        num_bedrooms: Number of bedrooms. The default value is 1.
+        num_bathrooms: Number of bathrooms. The default value is 1.
+        num_floors: Number of floors. The default value is 1.
+        year_built: What year the property is built. The default value is 0.
+        electricity_rate: The electrical wattage subscription from electricity provider. The default value is 1300.
+
+    Returns:
+        The predicted property price in IDR.
+    """
+
+    return predict_price(
         {
-            "router_prompt": {"query": question},
-            "router": {"query": question},
-        },
-        debug=settings.debug,
+            "subdistrict": [subdistrict],
+            "luas_tanah": [land_area],
+            "luas_bangunan": [building_area],
+            "jumlah_lantai": [num_floors],
+            "tahun_dibangun": [year_built],
+            "daya_listrik": [electricity_rate],
+            "land_building_ratio": [land_area / building_area],
+            "total_bedrooms": [num_bedrooms],
+            "total_bathrooms": [num_bathrooms],
+            "building_area_floor_ratio": [building_area / num_floors],
+        }
     )
-
-    # print if debug
-    if settings.debug:
-        print(result)
-
-    # check if the result is RAG
-    if "prediction_llm" in result:
-        return QueryResult(
-            success=True,
-            content=result["prediction_result_llm"]["replies"][0],
-            documents=[],
-            raw=result,
-        )
-
-    # create query documents
-    inserted_ids = []
-    documents = []
-
-    for doc in result["rag_doc_returner"]["documents"]:
-        # check if the document is already inserted
-        if doc["id"] in inserted_ids:
-            continue
-
-        # insert the document
-        inserted_ids.append(doc["id"])
-        documents.append(
-            QueryDocument(
-                id=doc["id"],
-                city=doc["city"],
-                district=doc["district"],
-                price=doc["price"],
-                url=doc["url"],
-                main_image_url=doc["main_image_url"],
-            )
-        )
-
-    # parse the result
-    response = QueryResult(
-        success=True,
-        content=result["rag_llm"]["replies"][0],
-        documents=documents,
-        raw=result,
-    )
-
-    return response

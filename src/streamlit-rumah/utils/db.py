@@ -1,185 +1,239 @@
-import json
-import uuid
+from dataclasses import dataclass
 
 import streamlit as st
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+import psycopg
+from pgvector.psycopg import register_vector
 
-from utils.config import get_settings
-from utils.models import (
-    UserSession,
-    Prediction,
-    OpenAIPrompt,
-    OpenAIResponse,
-    OpenAIUsage,
-    RetrievedDocument,
-)
-
-USAGE_TYPE_ROUTER = "router"
-USAGE_TYPE_PREDICTION_EXTRACTION = "llm_prediction_extraction"
-USAGE_TYPE_PREDICTION_PARAPHRASE = "llm_prediction_paraphrase"
-USAGE_TYPE_RAG_EMBEDDING = "llm_rag_embedding"
-USAGE_TYPE_RAG_RESPONSE = "llm_rag_response"
+# --------------------- DATA CLASSES ---------------------
 
 
-@st.cache_resource(show_spinner=False)
+@dataclass
+class LocationStatistics:
+    subdistrict: str
+    district: str
+    city: str
+    province: str
+    listing_count: int
+    average_price_idr: float
+
+
+@dataclass
+class RetrievedDocument:
+    id: str
+    parent_id: str | None
+    source: str
+    score: float
+
+
+@dataclass
+class Document:
+    id: str
+    content: str
+
+
+# --------------------- CACHED RESOURCES ---------------------
+
+
+@st.cache_resource()
 def get_connection():
-    # get settings from env
-    settings = get_settings()
+    db_conn = psycopg.connect(st.secrets["DB_URI"])
+    register_vector(db_conn)
 
-    # build dsn
-    dsn = f"mysql+pymysql://{settings.db_user}:{settings.db_password}@{settings.db_host}:{settings.db_port}/{settings.db_name}?charset=utf8mb4"
-
-    # create connection
-    engine = create_engine(dsn, echo=settings.debug)
-
-    return engine
+    return db_conn
 
 
-def track_user_session(_session_token: str) -> str:
-    # get connection
-    engine = get_connection()
+# --------------------- QUERIES ---------------------
 
-    # start transaction
-    with Session(engine) as tx:
-        # get user session
-        user_session = (
-            tx.query(UserSession).filter_by(session_token=_session_token).first()
-        )
 
-        # create user session if not exists
-        if not user_session:
-            user_session = UserSession(
-                id=str(uuid.uuid4()), session_token=_session_token
+def query_locations() -> list[LocationStatistics]:
+    db_conn = get_connection()
+
+    with db_conn.cursor() as cur:
+        try:
+            top_area_sql = """
+                SELECT 
+                    a.subdistrict,
+                    a.district,
+                    a.city,
+                    a.province,
+                    count(*) as	listing_count,
+                    avg(h.price) as average_price
+                FROM
+                    marts_dim_area a
+                INNER JOIN
+                    marts_fact_houses h ON h.area_sk = a.area_sk
+                GROUP BY
+                    a.subdistrict, a.district, a.city , a.province
+                ORDER BY 
+                    listing_count desc
+                LIMIT 15
+                """
+
+            cur.execute(top_area_sql)
+
+            return [LocationStatistics(*x) for x in cur.fetchall()]
+        except Exception as e:
+            db_conn.rollback()
+            print(e)
+
+            raise ValueError("Error when querying the database")
+
+
+def query_hybrid(
+    text_query: str, text_embedding, image_mandatory: bool
+) -> list[RetrievedDocument]:
+    db_conn = get_connection()
+
+    with db_conn.cursor() as cur:
+        try:
+            base_cte_sql = """
+                base_query as (
+                    SELECT h.*
+                    FROM houses h
+                    INNER JOIN house_images i ON i.parent_id = h.id
+                ),
+            """
+
+            nearest_docs_sql = f"""
+                WITH
+                {base_cte_sql if image_mandatory else ""}
+                bm25_query AS (
+                    SELECT 
+                        id, 
+                        parent_id,
+                        'bm25' AS source,
+                        paradedb.score(id) AS score
+                    FROM
+                        {"base_query" if image_mandatory else "houses"}
+                    WHERE
+                        content @@@ %(keyword)s 
+                    LIMIT 3
+                ),
+                embedding_query as (
+                    SELECT
+                        id, 
+                        parent_id,
+                        'embedding' AS source,
+                        1 - (embedding <=> %(embedding)s::vector) AS score
+                    FROM
+                        {"base_query" if image_mandatory else "houses"}
+                    ORDER BY
+                        score DESC
+                    LIMIT 3
+                )
+                (SELECT * FROM bm25_query LIMIT 3)
+                UNION
+                (SELECT * FROM embedding_query LIMIT 3)
+                """
+
+            cur.execute(
+                nearest_docs_sql, {"keyword": text_query, "embedding": text_embedding}
             )
 
-            tx.add(user_session)
+            return [RetrievedDocument(*x) for x in cur.fetchall()]
+        except Exception as e:
+            db_conn.rollback()
+            print(e)
 
-        tx.commit()
-
-        return user_session.id
-
-
-def track_prediction(_session_token: str, _request: dict, _predicted: float):
-    # get connection
-    engine = get_connection()
-
-    # start transaction
-    with Session(engine) as tx:
-        # get user session
-        user_session = track_user_session(_session_token)
-
-        # save prediction
-        prediction = Prediction(
-            id=str(uuid.uuid4()),
-            request=json.dumps(_request),
-            predicted=_predicted,
-            session_id=user_session,
-        )
-
-        tx.add(prediction)
-        tx.commit()
+            raise ValueError("Error when querying the database")
 
 
-def track_prompt(_session_token: str, _prompt: str, _response: dict):
-    # get connection
-    engine = get_connection()
+def query_image(image_embedding) -> list[RetrievedDocument]:
+    db_conn = get_connection()
 
-    # start transaction
-    with Session(engine) as tx:
-        # get user session
-        session_id = track_user_session(_session_token)
+    with db_conn.cursor() as cur:
+        try:
+            images_sql = """
+                SELECT
+                    id, 
+                    parent_id,
+                    'embedding' AS source,
+                    1 - (embedding <=> %(embedding)s::vector) AS score
+                FROM
+                    house_images
+                ORDER BY
+                    score DESC
+                LIMIT 3
+                """
 
-        # phase 1: track prompt usage
-        prompt_id = str(uuid.uuid4())
-        tx.add(OpenAIPrompt(id=prompt_id, prompt=_prompt, session_id=session_id))
+            cur.execute(images_sql, {"embedding": image_embedding})
 
-        # phase 2: track router usage
-        tx.add(
-            create_openai_usage(
-                USAGE_TYPE_ROUTER, _response["router_llm"]["meta"][0], prompt_id
-            )
-        )
+            results = [RetrievedDocument(*x) for x in cur.fetchall()]
 
-        # phase 3: track prediction or RAG usage
-        if "prediction_llm" in _response:
-            # phase 3a: track prediction pipeline
-            tx.add_all(
-                [
-                    # phase 3a.1: prediction feature extraction
-                    create_openai_usage(
-                        USAGE_TYPE_PREDICTION_EXTRACTION,
-                        _response["prediction_llm"]["meta"][0],
-                        prompt_id,
-                    ),
-                    # phase 3a.2: paraphrase response
-                    create_openai_response(
-                        _response["prediction_result_llm"]["replies"][0], prompt_id
-                    ),
-                    create_openai_usage(
-                        USAGE_TYPE_PREDICTION_PARAPHRASE,
-                        _response["prediction_result_llm"]["meta"][0],
-                        prompt_id,
-                    ),
-                ]
-            )
-        else:
-            # phase 3b: track RAG usage
-            tx.add_all(
-                [
-                    # phase 3b.1: question embedding
-                    create_openai_usage(
-                        USAGE_TYPE_RAG_EMBEDDING,
-                        _response["rag_embedder"]["meta"],
-                        prompt_id,
-                    ),
-                    # phase 3b.2: returned documents
-                    *create_rag_documents(
-                        _response["rag_doc_returner"]["documents"], prompt_id
-                    ),
-                    # phase 3b.3: QNA response
-                    create_openai_response(
-                        _response["rag_llm"]["replies"][0], prompt_id
-                    ),
-                    create_openai_usage(
-                        USAGE_TYPE_RAG_RESPONSE,
-                        _response["rag_llm"]["meta"][0],
-                        prompt_id,
-                    ),
-                ]
-            )
+            added_ids = []
+            return [x for x in results if x.parent_id not in added_ids]
 
-        # commit transaction
-        tx.commit()
+        except Exception as e:
+            db_conn.rollback()
+            print(e)
+
+            raise ValueError("Error when querying the database")
 
 
-def create_openai_response(contents: str, prompt_id: str):
-    return OpenAIResponse(id=str(uuid.uuid4()), contents=contents, prompt_id=prompt_id)
+def query_houses(ids: list[str]) -> list[Document]:
+    db_conn = get_connection()
+
+    with db_conn.cursor() as cur:
+        try:
+            related_docs_sql = """
+                WITH RECURSIVE
+                related_houses AS (
+                    SELECT
+                        id,
+                        content
+                    FROM
+                        houses
+                    WHERE
+                        id = ANY(%(ids)s)
+                    UNION
+                        SELECT
+                            e.id,
+                            e.content
+                        FROM
+                            houses e
+                        INNER JOIN related_houses s ON s.id = e.parent_id
+                ) 
+                SELECT
+                    *
+                FROM
+                    related_houses
+                WHERE
+                    length(content) > 50
+                """
+
+            norm_ids = [x.replace("-desc", "") for x in ids]
+            cur.execute(related_docs_sql, {"ids": list(set(norm_ids))[:5]})
+
+            return [Document(*x) for x in cur.fetchall()]
+
+        except Exception as e:
+            db_conn.rollback()
+            print(e)
+
+            raise ValueError("Error when querying the database")
 
 
-def create_openai_usage(usage_type: str, meta: dict[str, dict], prompt_id: str):
-    usage = meta["usage"]
-    return OpenAIUsage(
-        id=str(uuid.uuid4()),
-        usage_type=usage_type,
-        model=meta["model"],
-        total_tokens=usage.get("total_tokens", 0),
-        prompt_tokens=usage.get("prompt_tokens", 0),
-        completion_tokens=usage.get("completion_tokens", 0),
-        prompt_id=prompt_id,
-    )
+def query_house_images(house_id: str) -> list[str]:
+    db_conn = get_connection()
 
+    with db_conn.cursor() as cur:
+        try:
+            related_docs_sql = """
+                SELECT
+                    file_path
+                FROM
+                    house_images
+                WHERE
+                    parent_id = %(house_id)s
+                """
 
-def create_rag_documents(documents: list[dict], prompt_id: str):
-    return [
-        RetrievedDocument(
-            id=str(uuid.uuid4()),
-            city=doc["city"],
-            district=doc["district"],
-            price=doc["price"],
-            document_id=doc["id"],
-            prompt_id=prompt_id,
-        )
-        for doc in documents
-    ]
+            cur.execute(related_docs_sql, {"house_id": house_id})
+
+            return [x[0] for x in cur.fetchall()]
+
+        except Exception as e:
+            db_conn.rollback()
+            print(e)
+
+            raise ValueError("Error when querying the database")
