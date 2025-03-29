@@ -8,7 +8,7 @@ import geopandas as gpd
 def main(args):
     print("Geocoding relations...")
     tags = {"amenity": True, "landuse": ["retail", "commercial"]}
-    place = ox.geocoder.geocode_to_gdf(["R14745927", "R14762112"], by_osmid=True)
+    place = ox.geocoder.geocode_to_gdf(args.rels.split(","), by_osmid=True)
 
     print("Downloading relations...")
     gdf_osm = gpd.GeoDataFrame(
@@ -42,6 +42,12 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--rels", 
+        type=str, 
+        help="Nominatim relation IDs", 
+        default="R14745927,R14762112"
+    )
     parser.add_argument(
         "--output-file",
         type=str,
