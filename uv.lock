@@ -152,12 +152,12 @@ dependencies = [
     { name = "mcp", extra = ["cli"] },
     { name = "mlflow" },
     { name = "networkx" },
+    { name = "numpy" },
     { name = "optuna" },
     { name = "optunahub" },
     { name = "osmnx" },
     { name = "pandas" },
     { name = "pgvector" },
-    { name = "plotly" },
     { name = "psycopg", extra = ["binary"] },
     { name = "python-magic" },
     { name = "ruff" },
@@ -188,12 +188,12 @@ requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = ">=1.5.0" },
     { name = "mlflow", specifier = ">=2.21.0" },
     { name = "networkx", specifier = ">=3.4.2" },
+    { name = "numpy", specifier = ">=1.26.4" },
     { name = "optuna", specifier = ">=4.2.1" },
     { name = "optunahub", specifier = ">=0.2.0" },
     { name = "osmnx", specifier = ">=2.0.1" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "pgvector", specifier = ">=0.3.6" },
-    { name = "plotly", specifier = ">=6.0.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.6" },
     { name = "python-magic", specifier = ">=0.4.27" },
     { name = "ruff", specifier = ">=0.10.0" },
@@ -2331,19 +2331,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/13/fc/128cc9cb8f03208bdbf93d3aa862e16d376844a14f9a0ce5cf4507372de4/platformdirs-4.3.6.tar.gz", hash = "sha256:357fb2acbc885b0419afd3ce3ed34564c13c9b95c89360cd9563f73aa5e2b907", size = 21302 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3c/a6/bc1012356d8ece4d66dd75c4b9fc6c1f6650ddd5991e421177d9f8f671be/platformdirs-4.3.6-py3-none-any.whl", hash = "sha256:73e575e1408ab8103900836b97580d5307456908a03e92031bab39e4554cc3fb", size = 18439 },
-]
-
-[[package]]
-name = "plotly"
-version = "6.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "narwhals" },
-    { name = "packaging" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/9c/80/761c14012d6daf18e12b6d1e4f6b218e999bcceb694d7a9b180154f9e4db/plotly-6.0.0.tar.gz", hash = "sha256:c4aad38b8c3d65e4a5e7dd308b084143b9025c2cc9d5317fc1f1d30958db87d3", size = 8111782 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/77/a946f38b57fb88e736c71fbdd737a1aebd27b532bda0779c137f357cf5fc/plotly-6.0.0-py3-none-any.whl", hash = "sha256:f708871c3a9349a68791ff943a5781b1ec04de7769ea69068adcd9202e57653a", size = 14805949 },
 ]
 
 [[package]]
