@@ -175,6 +175,11 @@ CREDENTIALS
 .docker
 **/.streamlit/secrets.toml
 
+# enviornment
+docker/*.env
+docker/*.toml
+!docker/*.example
+
 # temp dir
 tmp/
 

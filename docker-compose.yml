@@ -11,20 +11,12 @@ services:
   web:
     build: src/streamlit-rumah
     ports:
-      - 443:8000
+      - 8000:8000
     depends_on:
       - postgres
     volumes:
       - docker/streamlit-secrets.toml:/usr/src/app/.streamlit/secrets.toml
-
-  mcp:
-    build: src/mcp-rumah
-    ports:
-      - 443:8000
-    depends_on:
-      - postgres
-    env_file:
-      - docker/mcp.env
+      - data/rumah123/images:/rumah123-images
 
 volumes:
   postgres:

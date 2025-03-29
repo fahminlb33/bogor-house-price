@@ -1,1 +1,6 @@
 __pycache__
+
+.streamlit
+.ruff_cache
+
+.env.example
