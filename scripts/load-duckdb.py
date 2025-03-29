@@ -38,7 +38,7 @@ def main(args):
             conn.execute(f"DROP TABLE IF EXISTS pg_db.{table}")
             conn.execute(f"CREATE TABLE pg_db.{table} AS SELECT * FROM {table}")
 
-        # load marts_houses_downstream to parquet
+        # load to files
         print("Load: L3 tables to files...")
         conn.execute(
             f"COPY marts_downstream_houses TO '{output_path / 'marts_downstream_houses.parquet'}'"
