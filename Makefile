@@ -1,8 +1,8 @@
 install:
-	pip install -r requirements.txt
+	uv sync
 
 format:
-	ruff format scripts/ src/streamlit-rumah/
+	ruff format scripts/ src/
 
 scrape:
 	cd scraper && \
@@ -10,21 +10,7 @@ scrape:
 
 dev:
 	cd app && \
-	streamlit run Dasbor.py
+	streamlit run Beranda.py
 
-deploy: etl_docs
+docker:
 	docker compose up -d
-
-etl:
-	cd transform && \
-	dbt run
-
-etl_test:
-	cd transform && \
-	dbt test
-
-etl_docs:
-	cd transform && \
-	dbt docs generate && \
-	mkdir -p ../app_docs && \
-	cp -rf target/* ../app_docs

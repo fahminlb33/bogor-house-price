@@ -31,4 +31,4 @@ EXPOSE 8000
 HEALTHCHECK CMD curl --fail http://localhost:8000/_stcore/health
 
 # start app
-CMD ["streamlit", "run", "Dasbor.py", "--server.port=8000", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "Beranda.py", "--server.port=8000", "--server.address=0.0.0.0"]

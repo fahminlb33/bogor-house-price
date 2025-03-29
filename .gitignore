@@ -167,10 +167,8 @@ catboost_info/
 crawls/
 
 # data
-data/
-dataset/
-dataset.bak/
-ml_models/
+data/*
+!data/.gitkeep
 
 # credentials
 CREDENTIALS

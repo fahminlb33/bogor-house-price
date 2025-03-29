@@ -1,7 +1,6 @@
 services:
   postgres:
     image: paradedb/paradedb:latest
-    restart: unless-stopped
     ports:
       - 5432:5432
     volumes:
@@ -9,18 +8,23 @@ services:
     env_file:
       - docker/db.env
 
-  # web:
-  #   build: src/streamlit-rumah
-  #   restart: unless-stopped
-  #   ports:
-  #     - 443:8000
-  #   depends_on:
-  #     - mariadb
-  #     - qdrant
-  #   env_file:
-  #     - docker/web.env
-  #   volumes:
-  #     - ./docker/uploads:/opt/uploads
+  web:
+    build: src/streamlit-rumah
+    ports:
+      - 443:8000
+    depends_on:
+      - postgres
+    volumes:
+      - docker/streamlit-secrets.toml:/usr/src/app/.streamlit/secrets.toml
+
+  mcp:
+    build: src/mcp-rumah
+    ports:
+      - 443:8000
+    depends_on:
+      - postgres
+    env_file:
+      - docker/mcp.env
 
 volumes:
   postgres:
